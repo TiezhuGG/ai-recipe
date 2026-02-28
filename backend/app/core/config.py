@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     
     # 豆包API配置
     DOUBAO_API_KEY: str = ""
-    DOUBAO_API_BASE_URL: str = "https://ark.cn-beijing.volces.com/api/v3"
+    DOUBAO_API_BASE_URL: str = ""
+    MODEL_NAME: str = ""
     
     # 数据库配置
     DATABASE_URL: str = "sqlite:///./dev.db"

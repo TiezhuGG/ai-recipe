@@ -20,6 +20,7 @@ class AIService:
         self.base_url = base_url or settings.DOUBAO_API_BASE_URL
         self.client = httpx.AsyncClient(timeout=settings.API_TIMEOUT)
         self.max_retries = settings.API_MAX_RETRIES
+        self.model = settings.MODEL_NAME
     
     def _build_recipe_prompt(
         self,
@@ -152,10 +153,10 @@ class AIService:
             Exception: API调用失败
         """
         prompt = self._build_recipe_prompt(ingredients, flavor_tags, cuisine_types, special_groups)
-        
+        print('正在生成菜谱============', self.api_key, self.base_url, self.model)
         # 构建请求体（豆包API格式）
         request_body = {
-            "model": "ep-20241226145926-qxqvh",  # 豆包模型ID，需要根据实际配置
+            "model": self.model,
             "messages": [
                 {
                     "role": "system",
@@ -167,7 +168,8 @@ class AIService:
                 }
             ],
             "temperature": 0.7,
-            "max_tokens": 2000
+            "max_tokens": 2000,
+            "stream": False,
         }
         
         headers = {
@@ -199,8 +201,11 @@ class AIService:
             except httpx.TimeoutException as e:
                 logger.error(f"API请求超时: {e}")
                 last_error = Exception("AI服务响应超时，请稍后重试")
+            except httpx.RequestError as e:
+                logger.error(f"API请求失败: {e.__class__.__name__} - {e}")
+                last_error = e
             except Exception as e:
-                logger.error(f"API调用失败: {e}")
+                logger.error(f"API调用中发生未知错误: {e.__class__.__name__} - {e}", exc_info=True)
                 last_error = e
             
             # 如果不是最后一次尝试，等待后重试
@@ -236,7 +241,7 @@ class AIService:
         prompt = "请识别图片中的食材，只返回食材名称列表，用逗号分隔。"
         
         request_body = {
-            "model": "ep-20241226145926-qxqvh",  # 视觉模型ID
+            "model": self.model,  # 视觉模型ID
             "messages": [
                 {
                     "role": "user",
