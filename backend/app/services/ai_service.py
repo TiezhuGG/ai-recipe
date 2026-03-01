@@ -153,7 +153,6 @@ class AIService:
             Exception: API调用失败
         """
         prompt = self._build_recipe_prompt(ingredients, flavor_tags, cuisine_types, special_groups)
-        print('正在生成菜谱============', self.api_key, self.base_url, self.model)
         # 构建请求体（豆包API格式）
         request_body = {
             "model": self.model,

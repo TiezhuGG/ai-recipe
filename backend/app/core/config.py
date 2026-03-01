@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     
     # API超时配置
-    API_TIMEOUT: int = 30
+    API_TIMEOUT: int = 120
     API_MAX_RETRIES: int = 2
     
     class Config:

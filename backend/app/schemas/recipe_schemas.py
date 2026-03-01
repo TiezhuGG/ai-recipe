@@ -9,7 +9,7 @@ from datetime import datetime
 class Ingredient(BaseModel):
     """食材模型"""
     name: str
-    amount: str
+    amount: float
     unit: str
 
 
