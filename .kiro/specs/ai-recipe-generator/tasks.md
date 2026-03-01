@@ -57,8 +57,8 @@
     - **属性 19: 会话验证正确性**
     - **验证需求: 8.3, 8.4**
 
-- [ ] 4. 实现AI服务集成
-  - [ ] 4.1 实现AIService类
+- [x] 4. 实现AI服务集成
+  - [x] 4.1 实现AIService类
     - 配置httpx异步客户端（30秒超时）
     - 实现_build_recipe_prompt方法（构建包含食材、口味、菜系、特殊人群的提示词）
     - 实现generate_recipe方法（调用豆包API生成菜谱）
@@ -66,7 +66,7 @@
     - 实现recognize_ingredients方法（调用豆包API识别图片）
     - _需求: 5.3, 5.4, 5.5, 3.5_
   
-  - [ ] 4.2 实现API错误处理和重试机制
+  - [x] 4.2 实现API错误处理和重试机制
     - 实现超时处理
     - 实现错误状态码处理
     - 实现解析错误处理
@@ -85,8 +85,8 @@
     - **属性 21: API错误处理友好性**
     - **验证需求: 9.3, 9.4, 9.5**
 
-- [ ] 5. 实现图片处理服务
-  - [ ] 5.1 实现ImageService类
+- [x] 5. 实现图片处理服务
+  - [x] 5.1 实现ImageService类
     - 实现validate_image方法（验证格式JPEG/PNG/WebP和大小<10MB）
     - 实现generate_filename方法（生成唯一文件名）
     - 实现save_uploaded_image方法（保存到文件系统）
@@ -101,8 +101,8 @@
     - **属性 8: 图片上传存储可检索性**
     - **验证需求: 3.4**
 
-- [ ] 6. 实现菜谱业务逻辑服务
-  - [ ] 6.1 实现RecipeService类
+- [x] 6. 实现菜谱业务逻辑服务
+  - [x] 6.1 实现RecipeService类
     - 实现generate_recipe方法（验证参数、调用AI、添加安全提示）
     - 实现_add_safety_tips方法（根据特殊人群添加提示）
     - 实现save_recipe方法（保存到数据库）
@@ -122,34 +122,34 @@
     - **属性 17: 用户菜谱隔离性**
     - **验证需求: 7.5, 8.5**
 
-- [ ] 7. 实现后端API端点
-  - [ ] 7.1 实现菜谱生成端点
+- [x] 7. 实现后端API端点
+  - [x] 7.1 实现菜谱生成端点
     - 创建POST /api/recipes/generate路由
     - 定义GenerateRecipeRequest和RecipeResponse模型
     - 实现请求处理逻辑（获取会话、调用服务、返回响应）
     - 实现错误处理
     - _需求: 5.1, 5.7_
   
-  - [ ] 7.2 实现图片识别端点
+  - [x] 7.2 实现图片识别端点
     - 创建POST /api/images/recognize路由
     - 定义ImageRecognitionResponse模型
     - 实现文件上传处理
     - 调用ImageService和AIService
     - _需求: 3.1, 3.4, 3.5, 3.6_
   
-  - [ ] 7.3 实现菜谱保存端点
+  - [x] 7.3 实现菜谱保存端点
     - 创建POST /api/recipes/save路由
     - 定义SaveRecipeRequest和SaveRecipeResponse模型
     - 实现保存逻辑
     - _需求: 7.1, 7.2, 7.3_
   
-  - [ ] 7.4 实现历史记录端点
+  - [x] 7.4 实现历史记录端点
     - 创建GET /api/recipes/history路由
     - 实现分页参数（limit, offset）
     - 定义RecipeHistoryResponse模型
     - _需求: 7.4, 7.5, 7.6_
   
-  - [ ] 7.5 实现菜谱详情端点
+  - [x] 7.5 实现菜谱详情端点
     - 创建GET /api/recipes/{recipe_id}路由
     - 实现权限验证
     - 实现404错误处理
@@ -161,12 +161,12 @@
     - 测试请求验证
     - _需求: 所有API相关需求_
 
-- [ ] 8. 检查点 - 后端功能验证
+- [x] 8. 检查点 - 后端功能验证
   - 确保所有后端测试通过
   - 手动测试API端点（使用Postman或curl）
   - 如有问题请询问用户
 
-- [ ] 9. 搭建前端项目基础架构
+- [x] 9. 搭建前端项目基础架构
   - 使用Vite创建Vue3 + TypeScript项目
   - 配置TailwindCSS或Element Plus
   - 配置Vue Router
@@ -174,14 +174,14 @@
   - 创建项目目录结构（components/、views/、services/、types/、composables/）
   - _需求: 11.1_
 
-- [ ] 10. 定义前端类型和接口
-  - [ ] 10.1 定义TypeScript类型
+- [x] 10. 定义前端类型和接口
+  - [x] 10.1 定义TypeScript类型
     - 定义Recipe、Ingredient、Step接口
     - 定义GenerateParams、RecipeListItem接口
     - 定义API请求和响应类型
     - _需求: 所有前端需求_
   
-  - [ ] 10.2 实现API客户端服务
+  - [x] 10.2 实现API客户端服务
     - 创建RecipeAPIClient类
     - 实现generateRecipe方法
     - 实现uploadImage方法
