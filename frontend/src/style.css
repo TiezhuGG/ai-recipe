@@ -33,3 +33,37 @@ body {
     background-color: #ffffff;
   }
 }
+
+/* 响应式设计工具类 */
+@layer utilities {
+  /* 确保触摸目标最小尺寸 44x44px */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* 图片优化 */
+  .img-optimized {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+
+  /* 移动端优化的容器 */
+  .container-mobile {
+    @apply px-4;
+  }
+
+  /* 平板优化的容器 */
+  @media (min-width: 768px) {
+    .container-mobile {
+      @apply px-6;
+    }
+  }
+
+  /* 桌面优化的容器 */
+  @media (min-width: 1024px) {
+    .container-mobile {
+      @apply px-8;
+    }
+  }
+}
