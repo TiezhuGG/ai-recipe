@@ -6,6 +6,7 @@ import httpx
 import json
 import logging
 import asyncio
+import base64
 
 from app.core.config import settings
 
@@ -18,9 +19,9 @@ class AIService:
     def __init__(self, api_key: str = None, base_url: str = None):
         self.api_key = api_key or settings.DOUBAO_API_KEY
         self.base_url = base_url or settings.DOUBAO_API_BASE_URL
-        self.client = httpx.AsyncClient(timeout=settings.API_TIMEOUT)
         self.max_retries = settings.API_MAX_RETRIES
         self.model = settings.MODEL_NAME
+        self.client = httpx.AsyncClient(timeout=settings.API_TIMEOUT)
     
     def _build_recipe_prompt(
         self,
@@ -231,6 +232,7 @@ class AIService:
         try:
             with open(image_path, "rb") as f:
                 image_data = f.read()
+            base64_image = base64.b64encode(image_data).decode('utf-8')
         except Exception as e:
             logger.error(f"读取图片文件失败: {e}")
             raise Exception("无法读取图片文件")
@@ -244,7 +246,15 @@ class AIService:
             "messages": [
                 {
                     "role": "user",
-                    "content": prompt
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}"
+                            }
+                        }
+                    ]
                 }
             ],
             "temperature": 0.3

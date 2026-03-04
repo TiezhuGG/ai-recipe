@@ -41,7 +41,7 @@
     </div>
 
     <!-- 已选择提示和说明 -->
-    <div v-if="selectedGroups.length > 0" class="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+    <div v-if="localSelectedGroups.length > 0" class="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
       <div class="flex items-start gap-2">
         <svg class="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
@@ -94,53 +94,64 @@ const specialGroups: SpecialGroup[] = [
   { value: '过敏体质', label: '过敏体质', icon: '⚠️' },
 ]
 
-// 状态
-const selectedGroups = ref<string[]>([...props.modelValue])
+const localSelectedGroups = computed({
+  get() {
+    return props.modelValue
+  },
+  set(newValue: string[]) {
+    emit('update:modelValue', newValue)
+  }
+})
+
+// // 状态
+// const selectedGroups = ref<string[]>([...props.modelValue])
 
 // 计算已选择的标签
 const selectedGroupLabels = computed(() => {
-  return selectedGroups.value.map(value => {
+  return localSelectedGroups.value.map(value => {
     const group = specialGroups.find(g => g.value === value)
     return group?.label || value
   })
 })
 
-// 监听外部变化
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    selectedGroups.value = [...newValue]
-  }
-)
 
-// 监听内部变化，同步到外部
-watch(
-  selectedGroups,
-  (newValue) => {
-    emit('update:modelValue', newValue)
-  },
-  { deep: true }
-)
+
+// // 监听外部变化
+// watch(
+//   () => props.modelValue,
+//   (newValue) => {
+//     selectedGroups.value = [...newValue]
+//   }
+// )
+
+// // 监听内部变化，同步到外部
+// watch(
+//   selectedGroups,
+//   (newValue) => {
+//     emit('update:modelValue', newValue)
+//   },
+//   { deep: true }
+// )
 
 /**
  * 检查人群是否被选中
  */
 function isSelected(value: string): boolean {
-  return selectedGroups.value.includes(value)
+  return localSelectedGroups.value.includes(value)
 }
 
 /**
  * 切换人群的选中状态
  */
 function toggleGroup(value: string) {
-  const index = selectedGroups.value.indexOf(value)
+  const index = localSelectedGroups.value.indexOf(value)
   
   if (index > -1) {
     // 已选中，取消选择
-    selectedGroups.value.splice(index, 1)
+    localSelectedGroups.value.splice(index, 1)
   } else {
     // 未选中，添加选择
-    selectedGroups.value.push(value)
+    localSelectedGroups.value.push(value)
   }
 }
 
@@ -148,7 +159,7 @@ function toggleGroup(value: string) {
  * 清空所有选择
  */
 function clearAll() {
-  selectedGroups.value = []
+  localSelectedGroups.value = []
 }
 
 // 暴露方法给父组件

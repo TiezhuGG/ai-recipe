@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 // Props
 interface Props {
@@ -88,22 +88,32 @@ const inputValue = ref('')
 const ingredients = ref<string[]>([...props.modelValue])
 const validationError = ref('')
 
-// 监听外部变化
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    ingredients.value = [...newValue]
-  }
-)
+// // 监听外部变化
+// watch(
+//   () => props.modelValue,
+//   (newValue) => {
+//     localIngredients.value = [...newValue]
+//   }
+// )
 
-// 监听内部变化，同步到外部
-watch(
-  ingredients,
-  (newValue) => {
-    emit('update:modelValue', newValue)
+// // 监听内部变化，同步到外部
+// watch(
+//   ingredients,
+//   (newValue) => {
+//     emit('update:modelValue', newValue)
+//   },
+//   { deep: true }
+// )
+
+// 使用可写的 computed 属性来同步 v-model
+const localIngredients = computed({
+  get() {
+    return props.modelValue
   },
-  { deep: true }
-)
+  set(newValue: string[]) {
+    emit('update:modelValue', newValue)
+  }
+})
 
 /**
  * 验证输入
@@ -150,7 +160,7 @@ function handleAdd() {
 
   // 过滤掉已存在的食材（去重）
   const uniqueIngredients = newIngredients.filter(
-    (item) => !ingredients.value.includes(item)
+    (item) => !localIngredients.value.includes(item)
   )
 
   if (uniqueIngredients.length === 0) {
@@ -159,7 +169,7 @@ function handleAdd() {
   }
 
   // 添加到列表
-  ingredients.value.push(...uniqueIngredients)
+  localIngredients.value.push(...uniqueIngredients)
 
   // 清空输入框
   inputValue.value = ''
@@ -170,14 +180,14 @@ function handleAdd() {
  * 删除食材
  */
 function removeIngredient(index: number) {
-  ingredients.value.splice(index, 1)
+  localIngredients.value.splice(index, 1)
 }
 
 /**
  * 清空所有食材
  */
 function clearAll() {
-  ingredients.value = []
+  localIngredients.value = []
   inputValue.value = ''
   validationError.value = ''
 }

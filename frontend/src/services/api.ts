@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios'
 // 创建axios实例
 const apiClient: AxiosInstance = axios.create({
   baseURL: '/api',
-  timeout: 30000,
+  timeout: 120000,
   withCredentials: true, // 发送Cookie
   headers: {
     'Content-Type': 'application/json',

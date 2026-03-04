@@ -23,14 +23,14 @@
     </div>
 
     <!-- 已选择提示 -->
-    <p v-if="selectedOptions.length > 0" class="mt-3 text-sm text-gray-600">
-      已选择 {{ selectedOptions.length }} 项
+    <p v-if="localSelectedOptions.length > 0" class="mt-3 text-sm text-gray-600">
+      已选择 {{ localSelectedOptions.length }} 项
     </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 // Props
 interface Props {
@@ -49,45 +49,55 @@ const emit = defineEmits<{
   'update:modelValue': [value: string[]]
 }>()
 
-// 状态
-const selectedOptions = ref<string[]>([...props.modelValue])
 
-// 监听外部变化
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    selectedOptions.value = [...newValue]
-  }
-)
-
-// 监听内部变化，同步到外部
-watch(
-  selectedOptions,
-  (newValue) => {
-    emit('update:modelValue', newValue)
+const localSelectedOptions = computed({
+  get() {
+    return props.modelValue
   },
-  { deep: true }
-)
+  set(newValue: string[]) {
+    emit('update:modelValue', newValue)
+  }
+})
+
+// // 状态
+// const selectedOptions = ref<string[]>([...props.modelValue])
+
+// // 监听外部变化
+// watch(
+//   () => props.modelValue,
+//   (newValue) => {
+//     selectedOptions.value = [...newValue]
+//   }
+// )
+
+// // 监听内部变化，同步到外部
+// watch(
+//   selectedOptions,
+//   (newValue) => {
+//     emit('update:modelValue', newValue)
+//   },
+//   { deep: true }
+// )
 
 /**
  * 检查选项是否被选中
  */
 function isSelected(option: string): boolean {
-  return selectedOptions.value.includes(option)
+  return localSelectedOptions.value.includes(option)
 }
 
 /**
  * 切换选项的选中状态
  */
 function toggleOption(option: string) {
-  const index = selectedOptions.value.indexOf(option)
+  const index = localSelectedOptions.value.indexOf(option)
   
   if (index > -1) {
     // 已选中，取消选择
-    selectedOptions.value.splice(index, 1)
+    localSelectedOptions.value.splice(index, 1)
   } else {
     // 未选中，添加选择
-    selectedOptions.value.push(option)
+    localSelectedOptions.value.push(option)
   }
 }
 
@@ -95,7 +105,7 @@ function toggleOption(option: string) {
  * 清空所有选择
  */
 function clearAll() {
-  selectedOptions.value = []
+  localSelectedOptions.value = []
 }
 
 // 暴露方法给父组件

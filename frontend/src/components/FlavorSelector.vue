@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import MultiSelector from './MultiSelector.vue'
 
 // Props
@@ -39,24 +39,33 @@ const flavorOptions = [
 ]
 
 // 状态
-const selectedFlavors = ref<string[]>([...props.modelValue])
+// const selectedFlavors = ref<string[]>([...props.modelValue])
 
-// 监听外部变化
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    selectedFlavors.value = [...newValue]
-  }
-)
+// // 监听外部变化
+// watch(
+//   () => props.modelValue,
+//   (newValue) => {
+//     selectedFlavors.value = [...newValue]
+//   }
+// )
 
-// 监听内部变化，同步到外部
-watch(
-  selectedFlavors,
-  (newValue) => {
-    emit('update:modelValue', newValue)
+// // 监听内部变化，同步到外部
+// watch(
+//   selectedFlavors,
+//   (newValue) => {
+//     emit('update:modelValue', newValue)
+//   },
+//   { deep: true }
+// )
+
+const selectedFlavors = computed({
+  get() {
+    return props.modelValue
   },
-  { deep: true }
-)
+  set(newValue: string[]) {
+    emit('update:modelValue', newValue)
+  }
+})
 </script>
 
 <style scoped>
