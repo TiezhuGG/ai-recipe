@@ -143,3 +143,28 @@ class RecipeRepository:
         except Exception as e:
             logger.error(f"统计用户菜谱数量失败: {e}")
             raise
+
+    
+    def get_all_recipes(self, limit: int = 100, offset: int = 0) -> List[Recipe]:
+        """
+        获取所有菜谱（用于搜索）
+        
+        Args:
+            limit: 返回数量限制
+            offset: 分页偏移量
+            
+        Returns:
+            List[Recipe]: 菜谱列表
+        """
+        try:
+            recipes = (
+                self.db.query(Recipe)
+                .order_by(Recipe.created_at.desc())
+                .limit(limit)
+                .offset(offset)
+                .all()
+            )
+            return recipes
+        except Exception as e:
+            logger.error(f"查询所有菜谱失败: {e}")
+            raise

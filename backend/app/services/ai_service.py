@@ -721,3 +721,195 @@ class AIService:
 - 多练习基本功
 
 如果问题持续，建议观看相关的烹饪教学视频，或咨询专业厨师。"""
+
+    async def parse_dish_ingredients(self, dish_name: str) -> Dict[str, Any]:
+        """
+        解析菜谱所需食材
+        
+        Args:
+            dish_name: 菜谱名称
+            
+        Returns:
+            Dict[str, Any]: 菜谱信息
+        """
+        # 构建提示词
+        prompt = f"""请分析菜谱"{dish_name}"，提供以下信息：
+
+1. 所需的主要食材（5-8种）
+2. 简短的菜谱描述（一句话）
+
+请以JSON格式返回，包含以下字段：
+- name: 菜谱名称
+- description: 简短描述
+- ingredients: 食材数组（只包含食材名称，不包含用量）
+
+示例：
+{{
+  "name": "红烧排骨",
+  "description": "色泽红亮，肉质酥烂，咸甜适中的经典家常菜",
+  "ingredients": ["排骨", "生姜", "大葱", "八角", "料酒", "酱油", "冰糖"]
+}}"""
+        
+        request_body = {
+            "model": self.model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "你是一个专业的烹饪顾问，擅长分析菜谱和食材。"
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "temperature": 0.7,
+            "max_tokens": 800,
+            "stream": False
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        logger.info(f"解析菜谱: {dish_name}")
+        
+        try:
+            response = await self.client.post(
+                f"{self.base_url}/chat/completions",
+                json=request_body,
+                headers=headers,
+                timeout=30.0
+            )
+            
+            if response.status_code == 200:
+                response_data = response.json()
+                
+                if "choices" in response_data and len(response_data["choices"]) > 0:
+                    content = response_data["choices"][0]["message"]["content"]
+                    
+                    # 尝试解析JSON
+                    try:
+                        # 查找JSON部分
+                        json_start = content.find("{")
+                        json_end = content.rfind("}") + 1
+                        
+                        if json_start >= 0 and json_end > json_start:
+                            json_str = content[json_start:json_end]
+                            dish_info = json.loads(json_str)
+                            logger.info(f"成功解析菜谱: {dish_name}")
+                            return dish_info
+                    except json.JSONDecodeError:
+                        logger.warning("无法解析JSON，返回默认信息")
+                    
+                    # 如果解析失败，返回默认信息
+                    return {
+                        "name": dish_name,
+                        "description": f"一道美味的{dish_name}",
+                        "ingredients": ["请根据实际情况准备食材"]
+                    }
+            
+            raise Exception(f"API返回错误状态码: {response.status_code}")
+            
+        except Exception as e:
+            logger.error(f"解析菜谱失败: {e}")
+            # 返回默认信息
+            return {
+                "name": dish_name,
+                "description": f"一道美味的{dish_name}",
+                "ingredients": ["请根据实际情况准备食材"]
+            }
+
+    async def get_ingredient_recommendation(self, ingredients: List[str]) -> Dict[str, Any]:
+        """
+        根据已有食材获取AI推荐
+        
+        Args:
+            ingredients: 已有食材列表
+            
+        Returns:
+            Dict[str, Any]: 推荐信息
+        """
+        # 构建提示词
+        ingredients_str = "、".join(ingredients)
+        prompt = f"""我现在有这些食材：{ingredients_str}
+
+请帮我分析并提供以下建议：
+1. 建议添加的食材（3-5种，能与现有食材搭配的）
+2. 推荐的菜谱名称（3-5个）
+3. 营养搭配建议（一句话）
+
+请以JSON格式返回，包含以下字段：
+- suggestedIngredients: 建议添加的食材数组
+- recommendedDishes: 推荐的菜谱名称数组
+- nutritionTips: 营养建议字符串"""
+        
+        request_body = {
+            "model": self.model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "你是一个专业的烹饪顾问，擅长食材搭配和营养分析。"
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "temperature": 0.7,
+            "max_tokens": 1000,
+            "stream": False
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        logger.info(f"获取食材推荐: {ingredients}")
+        
+        try:
+            response = await self.client.post(
+                f"{self.base_url}/chat/completions",
+                json=request_body,
+                headers=headers,
+                timeout=30.0
+            )
+            
+            if response.status_code == 200:
+                response_data = response.json()
+                
+                if "choices" in response_data and len(response_data["choices"]) > 0:
+                    content = response_data["choices"][0]["message"]["content"]
+                    
+                    # 尝试解析JSON
+                    try:
+                        # 查找JSON部分
+                        json_start = content.find("{")
+                        json_end = content.rfind("}") + 1
+                        
+                        if json_start >= 0 and json_end > json_start:
+                            json_str = content[json_start:json_end]
+                            recommendation = json.loads(json_str)
+                            logger.info(f"成功获取推荐")
+                            return recommendation
+                    except json.JSONDecodeError:
+                        logger.warning("无法解析JSON，返回默认推荐")
+                    
+                    # 如果解析失败，返回默认推荐
+                    return {
+                        "suggestedIngredients": ["盐", "油", "酱油", "葱", "姜"],
+                        "recommendedDishes": ["家常炒菜", "清炒时蔬", "简单快手菜"],
+                        "nutritionTips": "建议搭配蔬菜和蛋白质，营养更均衡。"
+                    }
+            
+            raise Exception(f"API返回错误状态码: {response.status_code}")
+            
+        except Exception as e:
+            logger.error(f"获取推荐失败: {e}")
+            # 返回默认推荐
+            return {
+                "suggestedIngredients": ["盐", "油", "酱油", "葱", "姜"],
+                "recommendedDishes": ["家常炒菜", "清炒时蔬", "简单快手菜"],
+                "nutritionTips": "建议搭配蔬菜和蛋白质，营养更均衡。"
+            }

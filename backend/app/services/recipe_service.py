@@ -324,3 +324,79 @@ class RecipeService:
         except Exception as e:
             logger.error(f"删除菜谱失败: {e}")
             raise Exception(f"删除菜谱失败: {str(e)}")
+
+    
+    async def search_recipes_by_ingredients(self, ingredients: List[str]) -> List[Dict[str, Any]]:
+        """
+        根据食材搜索菜谱
+        
+        Args:
+            ingredients: 食材列表
+            
+        Returns:
+            List[Dict[str, Any]]: 匹配的菜谱列表
+        """
+        try:
+            # 从数据库获取所有菜谱
+            all_recipes = self.recipe_repository.get_all_recipes(limit=100)
+            
+            # 计算匹配度
+            matched_recipes = []
+            
+            for recipe in all_recipes:
+                # 提取菜谱中的食材
+                recipe_ingredients = []
+                if recipe.ingredients:
+                    import json
+                    try:
+                        ingredients_data = json.loads(recipe.ingredients) if isinstance(recipe.ingredients, str) else recipe.ingredients
+                        
+                        # 提取主料和配料
+                        if isinstance(ingredients_data, dict):
+                            main_ingredients = ingredients_data.get('main', [])
+                            secondary_ingredients = ingredients_data.get('secondary', [])
+                            
+                            for ing in main_ingredients:
+                                if isinstance(ing, dict):
+                                    recipe_ingredients.append(ing.get('name', ''))
+                                else:
+                                    recipe_ingredients.append(str(ing))
+                            
+                            for ing in secondary_ingredients:
+                                if isinstance(ing, dict):
+                                    recipe_ingredients.append(ing.get('name', ''))
+                                else:
+                                    recipe_ingredients.append(str(ing))
+                    except:
+                        pass
+                
+                # 计算匹配的食材
+                matched_ingredients = []
+                for search_ing in ingredients:
+                    for recipe_ing in recipe_ingredients:
+                        if search_ing in recipe_ing or recipe_ing in search_ing:
+                            matched_ingredients.append(search_ing)
+                            break
+                
+                # 如果有匹配的食材，添加到结果
+                if matched_ingredients:
+                    match_score = int((len(matched_ingredients) / len(ingredients)) * 100)
+                    
+                    matched_recipes.append({
+                        'id': recipe.id,
+                        'name': recipe.name,
+                        'difficulty': recipe.difficulty,
+                        'cooking_time': recipe.cooking_time,
+                        'servings': recipe.servings,
+                        'matchedIngredients': matched_ingredients,
+                        'matchScore': match_score
+                    })
+            
+            # 按匹配度排序
+            matched_recipes.sort(key=lambda x: x['matchScore'], reverse=True)
+            
+            return matched_recipes[:20]  # 返回前20个结果
+            
+        except Exception as e:
+            logger.error(f"搜索菜谱失败: {e}")
+            return []

@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.core.database import init_db
-from app.routers import recipes, images, cooking
+from app.routers import recipes, images, cooking, search
 
 # 配置日志
 logging.basicConfig(
@@ -51,6 +51,7 @@ app.add_middleware(
 app.include_router(recipes.router, prefix="/api", tags=["recipes"])
 app.include_router(images.router, prefix="/api", tags=["images"])
 app.include_router(cooking.router, prefix="/api", tags=["cooking"])
+app.include_router(search.router, prefix="/api", tags=["search"])
 
 
 @app.get("/")
