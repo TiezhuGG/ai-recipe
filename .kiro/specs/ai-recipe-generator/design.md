@@ -926,8 +926,8 @@ recipe_strategy = st.builds(
 
 ```bash
 # 后端环境变量
-DOUBAO_API_KEY=your_api_key_here
-DOUBAO_API_BASE_URL=https://api.doubao.com
+LLM_API_KEY=your_api_key_here
+LLM_API_BASE_URL=https://api.doubao.com
 DATABASE_URL=postgresql://user:pass@localhost/dbname
 UPLOAD_DIR=/var/uploads
 SECRET_KEY=your_secret_key_here

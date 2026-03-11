@@ -175,15 +175,67 @@ export class RecipeAPIClient {
   }
 
   /**
-   * 询问烹饪问题（AI对话）
+   * 询问烹饪问题（AI对话）- 流式接收
    */
-  async askCookingQuestion(question: string): Promise<string> {
+  async askCookingQuestion(question: string, onChunk: (chunk: string) => void): Promise<void> {
     try {
-      const response = await apiClient.post<{ answer: string }>(
-        '/cooking/ask',
-        { question }
-      )
-      return response.data.answer
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/api/cooking/ask`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ question }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+
+      if (!reader) {
+        throw new Error('无法读取响应流')
+      }
+
+      while (true) {
+        const { done, value } = await reader.read()
+        
+        if (done) {
+          break
+        }
+
+        // 解码数据
+        const chunk = decoder.decode(value, { stream: true })
+        
+        // 处理SSE格式的数据
+        const lines = chunk.split('\n')
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            
+            try {
+              const parsed = JSON.parse(data)
+              
+              if (parsed.error) {
+                throw new Error(parsed.error)
+              }
+              
+              if (parsed.done) {
+                return
+              }
+              
+              if (parsed.content) {
+                onChunk(parsed.content)
+              }
+            } catch (e) {
+              // 忽略JSON解析错误
+              console.warn('解析SSE数据失败:', e)
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('询问烹饪问题失败:', error)
       throw new Error('AI服务暂时不可用，请稍后重试')

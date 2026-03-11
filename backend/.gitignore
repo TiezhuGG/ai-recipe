@@ -23,6 +23,10 @@ wheels/
 .installed.cfg
 *.egg
 
+# 忽略所有 .md 文件（除了 README.md）
+*.md
+!README.md
+
 # 环境变量
 .env
 .env.local

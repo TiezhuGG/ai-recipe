@@ -211,8 +211,8 @@ async def generate_dish_image(self, recipe_name: str, ingredients: List[str]) ->
 
 ```env
 # 豆包API配置
-DOUBAO_API_KEY=your_api_key_here
-DOUBAO_API_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+LLM_API_KEY=your_api_key_here
+LLM_API_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
 DOUBAO_IMAGE_MODEL=doubao-image-generation
 ```
 

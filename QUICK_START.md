@@ -60,7 +60,7 @@ pip install -r requirements.txt
 cp .env.example .env
 
 # 编辑 .env 文件，填入你的豆包 API 密钥
-# DOUBAO_API_KEY=your_api_key_here
+# LLM_API_KEY=your_api_key_here
 # DOUBAO_API_URL=https://ark.cn-beijing.volces.com/api/v3
 ```
 

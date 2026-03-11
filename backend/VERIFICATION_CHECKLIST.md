@@ -10,7 +10,7 @@
   ```
 
 - [ ] **环境配置**: .env文件已创建并配置
-  - [ ] DOUBAO_API_KEY已设置
+  - [ ] LLM_API_KEY已设置
   - [ ] DATABASE_URL已配置
   - [ ] UPLOAD_DIR已配置
   - [ ] CORS_ORIGINS已配置
@@ -225,7 +225,7 @@ python test_api.py
 1. **服务器未启动**: 确保 `python main.py` 正在运行
 2. **端口冲突**: 检查8000端口是否被占用
 3. **数据库错误**: 删除dev.db重新创建
-4. **API密钥错误**: 检查.env中的DOUBAO_API_KEY
+4. **API密钥错误**: 检查.env中的LLM_API_KEY
 5. **依赖缺失**: 重新运行 `pip install -r requirements.txt`
 6. **导入错误**: 确保在backend目录下运行
 

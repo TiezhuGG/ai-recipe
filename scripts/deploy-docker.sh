@@ -24,7 +24,7 @@ if [ ! -f ".env" ]; then
 DB_PASSWORD=change_me_in_production
 
 # 豆包 API 配置
-DOUBAO_API_KEY=your_api_key_here
+LLM_API_KEY=your_api_key_here
 DOUBAO_API_URL=https://ark.cn-beijing.volces.com/api/v3
 
 # 安全配置

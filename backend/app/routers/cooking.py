@@ -2,7 +2,9 @@
 烹饪学习相关路由
 """
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 import logging
+import json
 
 from app.services.ai_service import AIService
 
@@ -21,13 +23,13 @@ async def ask_cooking_question(
     ai_service: AIService = Depends(get_ai_service)
 ):
     """
-    询问烹饪问题（AI对话）
+    询问烹饪问题（AI对话）- 流式输出
     
     Args:
         request: 包含question的请求体
         
     Returns:
-        dict: 包含answer的响应
+        StreamingResponse: 流式响应
     """
     try:
         question = request.get('question', '')
@@ -37,15 +39,30 @@ async def ask_cooking_question(
         
         logger.info(f"收到烹饪问题: {question}")
         
-        # 调用AI服务回答问题
-        answer = await ai_service.answer_cooking_question(question)
+        # 定义流式生成器
+        async def generate():
+            try:
+                async for chunk in ai_service.answer_cooking_question_stream(question):
+                    # 发送SSE格式的数据
+                    yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
+                
+                # 发送结束标记
+                yield f"data: {json.dumps({'done': True}, ensure_ascii=False)}\n\n"
+                
+            except Exception as e:
+                logger.error(f"流式响应过程中出错: {e}", exc_info=True)
+                # 发送错误信息
+                yield f"data: {json.dumps({'error': str(e)}, ensure_ascii=False)}\n\n"
         
-        logger.info(f"成功回答问题，答案长度: {len(answer)}")
-        
-        return {
-            "success": True,
-            "answer": answer
-        }
+        return StreamingResponse(
+            generate(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no"  # 禁用nginx缓冲
+            }
+        )
         
     except HTTPException:
         raise

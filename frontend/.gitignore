@@ -7,6 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# 忽略所有 .md 文件（除了 README.md）
+*.md
+!README.md
+
 node_modules
 dist
 dist-ssr

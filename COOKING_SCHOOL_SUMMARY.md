@@ -150,8 +150,8 @@ python test_cooking_ai.py
 #### 3. 检查配置文件
 确认 `backend/.env` 文件中的配置：
 ```env
-DOUBAO_API_KEY=8b12a07e-b47a-4e39-8e36-c96c7ccced86
-DOUBAO_API_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+LLM_API_KEY=8b12a07e-b47a-4e39-8e36-c96c7ccced86
+LLM_API_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
 MODEL_NAME=doubao-seed-1-8-251228
 ```
 

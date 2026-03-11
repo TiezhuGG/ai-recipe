@@ -87,8 +87,8 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ## 环境变量说明
 
-- `DOUBAO_API_KEY`: 豆包API密钥
-- `DOUBAO_API_BASE_URL`: 豆包API基础URL
+- `LLM_API_KEY`: 豆包API密钥
+- `LLM_API_BASE_URL`: 豆包API基础URL
 - `DATABASE_URL`: 数据库连接URL
 - `UPLOAD_DIR`: 文件上传目录
 - `SECRET_KEY`: 应用密钥

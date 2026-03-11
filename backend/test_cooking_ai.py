@@ -15,8 +15,8 @@ async def test_cooking_question():
     
     # 检查配置
     print(f"\n配置信息:")
-    print(f"API Key (前8位): {settings.DOUBAO_API_KEY[:8]}...")
-    print(f"API Base URL: {settings.DOUBAO_API_BASE_URL}")
+    print(f"API Key (前8位): {settings.LLM_API_KEY[:8]}...")
+    print(f"API Base URL: {settings.LLM_API_BASE_URL}")
     print(f"Model Name: {settings.MODEL_NAME}")
     
     ai_service = AIService()

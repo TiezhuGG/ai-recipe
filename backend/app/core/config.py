@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     """应用配置"""
     
     # 豆包API配置
-    DOUBAO_API_KEY: str = ""
-    DOUBAO_API_BASE_URL: str = ""
+    LLM_API_KEY: str = ""
+    LLM_API_BASE_URL: str = ""
     MODEL_NAME: str = ""
     
     # 数据库配置

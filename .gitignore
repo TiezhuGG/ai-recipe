@@ -1,0 +1,58 @@
+# 忽略所有 .md 文件
+*.md
+
+# 但保留 README.md
+!README.md
+!*/README.md
+
+# Node modules
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 数据库
+*.db
+*.sqlite
+*.sqlite3
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 日志
+*.log
+logs/
+
+# 构建输出
+dist/
+build/
+*.egg-info/
+
+# 上传文件
+uploads/
+!uploads/.gitkeep
+
+# 临时文件
+*.tmp
+*.temp
+.cache/

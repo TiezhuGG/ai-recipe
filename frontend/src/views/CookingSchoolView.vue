@@ -401,21 +401,25 @@ async function sendMessage() {
   userInput.value = ''
   isThinking.value = true
 
+  // 添加一个空的AI消息，用于流式更新
+  const aiMessageIndex = chatHistory.value.length
+  chatHistory.value.push({
+    role: 'assistant',
+    content: '',
+    time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  })
+
   try {
-    // 调用AI服务
-    const response = await recipeApi.askCookingQuestion(question)
+    // 调用AI服务（流式）
+    await recipeApi.askCookingQuestion(question, (chunk: string) => {
+      // 更新AI消息内容
+      chatHistory.value[aiMessageIndex].content += chunk
+    })
     
-    chatHistory.value.push({
-      role: 'assistant',
-      content: response,
-      time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-    })
   } catch (error) {
-    chatHistory.value.push({
-      role: 'assistant',
-      content: '抱歉，我现在有点忙，请稍后再试。',
-      time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-    })
+    // 如果出错，显示错误消息
+    chatHistory.value[aiMessageIndex].content = '抱歉，我现在有点忙，请稍后再试。'
+    console.error('AI对话失败:', error)
   } finally {
     isThinking.value = false
   }

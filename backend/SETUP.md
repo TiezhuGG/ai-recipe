@@ -21,8 +21,8 @@ copy .env.example .env
 
 ```env
 # 豆包API配置（必需）
-DOUBAO_API_KEY=your_api_key_here
-DOUBAO_API_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+LLM_API_KEY=your_api_key_here
+LLM_API_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
 
 # 数据库配置（可选，默认使用SQLite）
 DATABASE_URL=sqlite:///./dev.db
@@ -34,7 +34,7 @@ UPLOAD_DIR=./uploads
 CORS_ORIGINS=http://localhost:3000,http://localhost:5173
 ```
 
-**重要**: 必须配置有效的 `DOUBAO_API_KEY` 才能使用AI功能。
+**重要**: 必须配置有效的 `LLM_API_KEY` 才能使用AI功能。
 
 ### 3. 启动服务器
 

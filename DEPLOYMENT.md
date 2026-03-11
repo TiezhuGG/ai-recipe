@@ -30,7 +30,7 @@
 DB_PASSWORD=your_secure_password_here
 
 # 豆包 API 配置
-DOUBAO_API_KEY=your_doubao_api_key
+LLM_API_KEY=your_LLM_API_KEY
 DOUBAO_API_URL=https://ark.cn-beijing.volces.com/api/v3
 
 # 安全配置

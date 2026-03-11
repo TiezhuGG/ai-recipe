@@ -23,14 +23,14 @@ DATABASE_URL = os.getenv(
 )
 
 # 豆包 AI API 配置
-DOUBAO_API_KEY = os.getenv("DOUBAO_API_KEY")
+LLM_API_KEY = os.getenv("LLM_API_KEY")
 DOUBAO_API_URL = os.getenv(
     "DOUBAO_API_URL",
     "https://ark.cn-beijing.volces.com/api/v3"
 )
 
-if not DOUBAO_API_KEY:
-    raise ValueError("DOUBAO_API_KEY must be set in production")
+if not LLM_API_KEY:
+    raise ValueError("LLM_API_KEY must be set in production")
 
 # 文件上传配置
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "/var/www/recipe-app/uploads"))

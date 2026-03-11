@@ -17,8 +17,8 @@ class AIService:
     """处理与豆包API的交互"""
     
     def __init__(self, api_key: str = None, base_url: str = None):
-        self.api_key = api_key or settings.DOUBAO_API_KEY
-        self.base_url = base_url or settings.DOUBAO_API_BASE_URL
+        self.api_key = api_key or settings.LLM_API_KEY
+        self.base_url = base_url or settings.LLM_API_BASE_URL
         self.max_retries = settings.API_MAX_RETRIES
         self.model = settings.MODEL_NAME
         self.client = httpx.AsyncClient(timeout=settings.API_TIMEOUT)
@@ -411,7 +411,7 @@ class AIService:
     
     async def answer_cooking_question(self, question: str) -> str:
         """
-        回答烹饪相关问题
+        回答烹饪相关问题（非流式）
         
         Args:
             question: 用户的烹饪问题
@@ -448,48 +448,139 @@ class AIService:
         last_error = None
         for attempt in range(self.max_retries + 1):
             try:
-                logger.info(f"调用豆包API回答烹饪问题 (尝试 {attempt + 1}/{self.max_retries + 1})")
-                logger.debug(f"API URL: {self.base_url}/chat/completions")
-                logger.debug(f"API Key (前8位): {self.api_key[:8]}...")
-                logger.debug(f"Model: {self.model}")
+                logger.info(f"调用AI API回答烹饪问题 (尝试 {attempt + 1}/{self.max_retries + 1})")
+                logger.info(f"API URL: {self.base_url}/chat/completions")
+                logger.info(f"API Key (前8位): {self.api_key[:8] if self.api_key else 'None'}...")
+                logger.info(f"Model: {self.model}")
+                logger.info(f"问题: {question}")
                 
                 response = await self.client.post(
                     f"{self.base_url}/chat/completions",
                     json=request_body,
                     headers=headers,
-                    timeout=30.0
+                    timeout=60.0  # 增加超时时间
                 )
                 
                 logger.info(f"API响应状态码: {response.status_code}")
                 
                 if response.status_code == 200:
                     response_data = response.json()
-                    logger.debug(f"API响应数据: {response_data}")
+                    logger.info(f"API响应数据结构: {list(response_data.keys())}")
+                    
                     if "choices" in response_data and len(response_data["choices"]) > 0:
                         answer = response_data["choices"][0]["message"]["content"]
-                        logger.info(f"成功回答烹饪问题")
+                        logger.info(f"✅ 成功回答烹饪问题，答案长度: {len(answer)}")
                         return answer
                     else:
-                        raise ValueError("响应格式不正确")
+                        error_msg = f"响应格式不正确，缺少choices字段。响应: {response_data}"
+                        logger.error(error_msg)
+                        raise ValueError(error_msg)
                 else:
                     error_msg = f"API返回错误状态码: {response.status_code}"
                     logger.error(f"{error_msg}, 响应: {response.text}")
                     last_error = Exception(error_msg)
                     
             except httpx.TimeoutException as e:
-                logger.error(f"API请求超时: {e}")
+                logger.error(f"❌ API请求超时: {e}")
                 last_error = Exception("AI服务响应超时，请稍后重试")
             except Exception as e:
-                logger.error(f"API调用失败: {e.__class__.__name__} - {e}", exc_info=True)
+                logger.error(f"❌ API调用失败: {e.__class__.__name__} - {e}", exc_info=True)
                 last_error = e
             
             # 如果不是最后一次尝试，等待后重试
             if attempt < self.max_retries:
+                logger.warning(f"重试中，等待1秒...")
                 await asyncio.sleep(1)
         
-        # 所有重试都失败，返回备用回答
-        logger.warning(f"AI服务调用失败，使用备用回答。最后错误: {last_error}")
-        return self._get_fallback_answer(question)
+        # 所有重试都失败，抛出异常而不是返回备用答案
+        logger.error(f"❌ AI服务调用失败，所有重试都失败。最后错误: {last_error}")
+        raise last_error or Exception("AI服务调用失败")
+    
+    async def answer_cooking_question_stream(self, question: str):
+        """
+        回答烹饪相关问题（流式输出）
+        
+        Args:
+            question: 用户的烹饪问题
+            
+        Yields:
+            str: AI回答的文本片段
+        """
+        # 构建系统提示词
+        system_prompt = """你是一位经验丰富的烹饪导师，擅长解答各种烹饪问题。
+你的回答应该：
+1. 专业且易懂
+2. 提供具体的操作建议
+3. 包含实用的技巧
+4. 考虑安全和健康因素
+5. 语气友好亲切"""
+        
+        request_body = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": question}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 1000,
+            "stream": True  # 启用流式输出
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        logger.info(f"调用AI API回答烹饪问题（流式）")
+        logger.info(f"API URL: {self.base_url}/chat/completions")
+        logger.info(f"问题: {question}")
+        
+        try:
+            async with self.client.stream(
+                "POST",
+                f"{self.base_url}/chat/completions",
+                json=request_body,
+                headers=headers,
+                timeout=60.0
+            ) as response:
+                if response.status_code != 200:
+                    error_msg = f"API返回错误状态码: {response.status_code}"
+                    logger.error(error_msg)
+                    raise Exception(error_msg)
+                
+                logger.info("开始接收流式响应")
+                
+                async for line in response.aiter_lines():
+                    if not line or line.strip() == "":
+                        continue
+                    
+                    # 移除 "data: " 前缀
+                    if line.startswith("data: "):
+                        line = line[6:]
+                    
+                    # 检查是否是结束标记
+                    if line.strip() == "[DONE]":
+                        logger.info("流式响应结束")
+                        break
+                    
+                    try:
+                        # 解析JSON
+                        chunk = json.loads(line)
+                        
+                        # 提取内容
+                        if "choices" in chunk and len(chunk["choices"]) > 0:
+                            delta = chunk["choices"][0].get("delta", {})
+                            content = delta.get("content", "")
+                            
+                            if content:
+                                yield content
+                    except json.JSONDecodeError as e:
+                        logger.warning(f"解析流式响应失败: {e}, 行内容: {line}")
+                        continue
+                
+        except Exception as e:
+            logger.error(f"❌ 流式API调用失败: {e.__class__.__name__} - {e}", exc_info=True)
+            raise
     
     async def diagnose_cooking_problem(self, problem: str) -> str:
         """
