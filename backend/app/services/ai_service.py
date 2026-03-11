@@ -408,3 +408,204 @@ class AIService:
         import urllib.parse
         encoded_name = urllib.parse.quote(recipe_name)
         return f"https://via.placeholder.com/800x600/22c55e/ffffff?text={encoded_name}+%F0%9F%8D%B2"
+    
+    async def answer_cooking_question(self, question: str) -> str:
+        """
+        回答烹饪相关问题
+        
+        Args:
+            question: 用户的烹饪问题
+            
+        Returns:
+            str: AI的回答
+        """
+        # 构建系统提示词
+        system_prompt = """你是一位经验丰富的烹饪导师，擅长解答各种烹饪问题。
+你的回答应该：
+1. 专业且易懂
+2. 提供具体的操作建议
+3. 包含实用的技巧
+4. 考虑安全和健康因素
+5. 语气友好亲切"""
+        
+        request_body = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": question}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 1000,
+            "stream": False
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        # 实现重试机制
+        last_error = None
+        for attempt in range(self.max_retries + 1):
+            try:
+                logger.info(f"调用豆包API回答烹饪问题 (尝试 {attempt + 1}/{self.max_retries + 1})")
+                logger.debug(f"API URL: {self.base_url}/chat/completions")
+                logger.debug(f"API Key (前8位): {self.api_key[:8]}...")
+                logger.debug(f"Model: {self.model}")
+                
+                response = await self.client.post(
+                    f"{self.base_url}/chat/completions",
+                    json=request_body,
+                    headers=headers,
+                    timeout=30.0
+                )
+                
+                logger.info(f"API响应状态码: {response.status_code}")
+                
+                if response.status_code == 200:
+                    response_data = response.json()
+                    logger.debug(f"API响应数据: {response_data}")
+                    if "choices" in response_data and len(response_data["choices"]) > 0:
+                        answer = response_data["choices"][0]["message"]["content"]
+                        logger.info(f"成功回答烹饪问题")
+                        return answer
+                    else:
+                        raise ValueError("响应格式不正确")
+                else:
+                    error_msg = f"API返回错误状态码: {response.status_code}"
+                    logger.error(f"{error_msg}, 响应: {response.text}")
+                    last_error = Exception(error_msg)
+                    
+            except httpx.TimeoutException as e:
+                logger.error(f"API请求超时: {e}")
+                last_error = Exception("AI服务响应超时，请稍后重试")
+            except Exception as e:
+                logger.error(f"API调用失败: {e.__class__.__name__} - {e}", exc_info=True)
+                last_error = e
+            
+            # 如果不是最后一次尝试，等待后重试
+            if attempt < self.max_retries:
+                await asyncio.sleep(1)
+        
+        # 所有重试都失败，返回备用回答
+        logger.warning(f"AI服务调用失败，使用备用回答。最后错误: {last_error}")
+        return self._get_fallback_answer(question)
+    
+    async def diagnose_cooking_problem(self, problem: str) -> str:
+        """
+        诊断烹饪问题
+        
+        Args:
+            problem: 问题描述
+            
+        Returns:
+            str: 诊断结果和建议
+        """
+        # 构建系统提示词
+        system_prompt = """你是一位专业的烹饪问题诊断专家。
+根据用户描述的问题，你需要：
+1. 分析可能的原因
+2. 提供具体的解决方案
+3. 给出预防建议
+4. 语气专业但友好"""
+        
+        request_body = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"我遇到的烹饪问题是：{problem}\n\n请帮我诊断并提供解决方案。"}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 1500,
+            "stream": False
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        # 实现重试机制
+        last_error = None
+        for attempt in range(self.max_retries + 1):
+            try:
+                logger.info(f"调用豆包API诊断烹饪问题 (尝试 {attempt + 1}/{self.max_retries + 1})")
+                logger.debug(f"API URL: {self.base_url}/chat/completions")
+                logger.debug(f"API Key (前8位): {self.api_key[:8]}...")
+                logger.debug(f"Model: {self.model}")
+                
+                response = await self.client.post(
+                    f"{self.base_url}/chat/completions",
+                    json=request_body,
+                    headers=headers,
+                    timeout=30.0
+                )
+                
+                logger.info(f"API响应状态码: {response.status_code}")
+                
+                if response.status_code == 200:
+                    response_data = response.json()
+                    logger.debug(f"API响应数据: {response_data}")
+                    if "choices" in response_data and len(response_data["choices"]) > 0:
+                        diagnosis = response_data["choices"][0]["message"]["content"]
+                        logger.info(f"成功诊断烹饪问题")
+                        return diagnosis
+                    else:
+                        raise ValueError("响应格式不正确")
+                else:
+                    error_msg = f"API返回错误状态码: {response.status_code}"
+                    logger.error(f"{error_msg}, 响应: {response.text}")
+                    last_error = Exception(error_msg)
+                    
+            except httpx.TimeoutException as e:
+                logger.error(f"API请求超时: {e}")
+                last_error = Exception("AI服务响应超时，请稍后重试")
+            except Exception as e:
+                logger.error(f"API调用失败: {e.__class__.__name__} - {e}", exc_info=True)
+                last_error = e
+            
+            # 如果不是最后一次尝试，等待后重试
+            if attempt < self.max_retries:
+                await asyncio.sleep(1)
+        
+        # 所有重试都失败，返回备用诊断
+        logger.warning(f"AI服务调用失败，使用备用诊断。最后错误: {last_error}")
+        return self._get_fallback_diagnosis(problem)
+    
+    def _get_fallback_answer(self, question: str) -> str:
+        """获取备用回答"""
+        fallback_answers = {
+            "火候": "掌握火候的关键是：大火快炒保持食材脆嫩，中火慢炖让味道充分融合，小火慢煮保持食材完整。建议多练习，观察食材的变化。",
+            "调味": "基本调味比例：盐1份、糖0.5份、醋0.3份、酱油适量。记住'咸鲜为主，酸甜为辅'的原则，可以边尝边调整。",
+            "刀工": "刀工的基本原则：顺纹切肉逆纹切，保持刀具锋利，切菜时手指弯曲保护指尖。多练习基本刀法，从简单开始。",
+        }
+        
+        for keyword, answer in fallback_answers.items():
+            if keyword in question:
+                return answer
+        
+        return "这是一个很好的问题！建议您：\n1. 多观察食材的变化\n2. 掌握基本的烹饪原理\n3. 多实践多总结\n4. 可以参考专业烹饪书籍或视频教程"
+    
+    def _get_fallback_diagnosis(self, problem: str) -> str:
+        """获取备用诊断"""
+        return f"""根据您描述的问题，可能的原因和解决方案：
+
+**可能原因：**
+1. 火候控制不当
+2. 调味比例不合适
+3. 烹饪时间过长或过短
+4. 食材处理不到位
+
+**解决方案：**
+1. 注意观察食材的颜色和状态变化
+2. 按照菜谱建议的比例调味，可以先少放后补
+3. 掌握不同食材的最佳烹饪时间
+4. 确保食材新鲜，处理干净
+
+**预防建议：**
+- 提前准备好所有食材和调料
+- 熟悉菜谱的每个步骤
+- 保持厨房整洁有序
+- 多练习基本功
+
+如果问题持续，建议观看相关的烹饪教学视频，或咨询专业厨师。"""

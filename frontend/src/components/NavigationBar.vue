@@ -43,7 +43,13 @@
         📖 菜谱全集
       </button>
       <button
-        class="px-4 py-2 bg-dark-400 text-gray-300 rounded-lg hover:bg-dark-300 transition border border-gray-600"
+        @click="$router.push('/cooking-school')"
+        :class="[
+          'px-4 py-2 rounded-lg transition font-medium',
+          currentRoute === 'cooking-school'
+            ? 'bg-primary-500 text-dark-500 hover:bg-primary-400'
+            : 'bg-dark-400 text-gray-300 hover:bg-dark-300 border border-gray-600'
+        ]"
       >
         👨‍🍳 去学厨房
       </button>
@@ -66,7 +72,7 @@ interface Props {
   icon: string
   title: string
   subtitle: string
-  currentRoute: 'home' | 'blind-box' | 'history'
+  currentRoute: 'home' | 'blind-box' | 'history' | 'cooking-school'
 }
 
 defineProps<Props>()

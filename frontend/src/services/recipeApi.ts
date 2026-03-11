@@ -173,6 +173,38 @@ export class RecipeAPIClient {
       throw new Error('生成菜品图片失败，请稍后重试')
     }
   }
+
+  /**
+   * 询问烹饪问题（AI对话）
+   */
+  async askCookingQuestion(question: string): Promise<string> {
+    try {
+      const response = await apiClient.post<{ answer: string }>(
+        '/cooking/ask',
+        { question }
+      )
+      return response.data.answer
+    } catch (error) {
+      console.error('询问烹饪问题失败:', error)
+      throw new Error('AI服务暂时不可用，请稍后重试')
+    }
+  }
+
+  /**
+   * 诊断烹饪问题
+   */
+  async diagnoseCookingProblem(problem: string): Promise<string> {
+    try {
+      const response = await apiClient.post<{ diagnosis: string }>(
+        '/cooking/diagnose',
+        { problem }
+      )
+      return response.data.diagnosis
+    } catch (error) {
+      console.error('诊断烹饪问题失败:', error)
+      throw new Error('诊断服务暂时不可用，请稍后重试')
+    }
+  }
 }
 
 // 导出单例

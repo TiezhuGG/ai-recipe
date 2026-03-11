@@ -12,6 +12,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/BlindBoxView.vue'),
   },
   {
+    path: '/cooking-school',
+    name: 'CookingSchool',
+    component: () => import('@/views/CookingSchoolView.vue'),
+  },
+  {
     path: '/history',
     name: 'History',
     component: () => import('@/views/HistoryView.vue'),
