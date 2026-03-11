@@ -235,16 +235,14 @@ async def get_recipe_by_id(
 
 @router.post("/recipes/generate-image")
 async def generate_dish_image(
-    recipe_name: str,
-    ingredients: list[str],
+    request: dict,
     recipe_service: RecipeService = Depends(get_recipe_service)
 ):
     """
     生成菜品效果图
     
     Args:
-        recipe_name: 菜谱名称
-        ingredients: 食材列表
+        request: 包含recipe_name和ingredients的请求体
         
     Returns:
         dict: 包含图片URL的响应
@@ -254,6 +252,9 @@ async def generate_dish_image(
         500: AI服务调用失败
     """
     try:
+        recipe_name = request.get('recipe_name')
+        ingredients = request.get('ingredients', [])
+        
         if not recipe_name or not ingredients:
             raise HTTPException(status_code=400, detail="菜谱名称和食材不能为空")
         

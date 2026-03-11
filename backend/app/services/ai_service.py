@@ -330,62 +330,81 @@ class AIService:
         ingredients_str = "、".join(ingredients[:5])  # 只取前5个主要食材
         prompt = f"一道精美的{recipe_name}，主要食材包括{ingredients_str}，摆盘精致，色彩鲜艳，专业美食摄影风格，高清画质"
         
-        # 构建请求体（豆包图像生成API格式）
-        request_body = {
-            "model": "doubao-image-generation",  # 图像生成模型
-            "prompt": prompt,
-            "n": 1,  # 生成1张图片
-            "size": "1024x1024",  # 图片尺寸
-            "quality": "standard",
-            "style": "vivid"
-        }
+        logger.info(f"生成菜品图片提示词: {prompt}")
         
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
-        # 实现重试机制
-        last_error = None
-        for attempt in range(self.max_retries + 1):
+        # 临时方案：使用占位图服务
+        # TODO: 当豆包图像生成API可用时，替换为真实的API调用
+        try:
+            # 方案1: 尝试调用豆包图像生成API
+            request_body = {
+                "model": "doubao-image-generation",
+                "prompt": prompt,
+                "n": 1,
+                "size": "1024x1024",
+                "quality": "standard",
+                "style": "vivid"
+            }
+            
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
             try:
-                logger.info(f"调用豆包API生成菜品图片 (尝试 {attempt + 1}/{self.max_retries + 1})")
-                
                 response = await self.client.post(
                     f"{self.base_url}/images/generations",
                     json=request_body,
                     headers=headers,
-                    timeout=60.0  # 图片生成可能需要更长时间
+                    timeout=60.0
                 )
                 
                 if response.status_code == 200:
                     response_data = response.json()
-                    
-                    # 解析图片URL
                     if "data" in response_data and len(response_data["data"]) > 0:
                         image_url = response_data["data"][0].get("url")
                         if image_url:
                             logger.info(f"成功生成菜品图片: {image_url}")
                             return image_url
-                        else:
-                            raise ValueError("响应中未找到图片URL")
-                    else:
-                        raise ValueError("响应格式不正确")
-                else:
-                    error_msg = f"API返回错误状态码: {response.status_code}"
-                    logger.error(f"{error_msg}, 响应: {response.text}")
-                    last_error = Exception(error_msg)
-                    
-            except httpx.TimeoutException as e:
-                logger.error(f"API请求超时: {e}")
-                last_error = Exception("图片生成服务响应超时，请稍后重试")
-            except Exception as e:
-                logger.error(f"API调用失败: {e}")
-                last_error = e
+            except Exception as api_error:
+                logger.warning(f"豆包图像API调用失败，使用备用方案: {api_error}")
             
-            # 如果不是最后一次尝试，等待后重试
-            if attempt < self.max_retries:
-                await asyncio.sleep(2)  # 图片生成等待时间更长
+            # 方案2: 使用Foodish API（免费的随机美食图片API）
+            try:
+                # Foodish API 提供真实的美食图片
+                foodish_response = await self.client.get(
+                    "https://foodish-api.com/api/",
+                    timeout=10.0
+                )
+                if foodish_response.status_code == 200:
+                    foodish_data = foodish_response.json()
+                    if "image" in foodish_data:
+                        logger.info(f"使用Foodish美食图片: {foodish_data['image']}")
+                        return foodish_data["image"]
+            except Exception as foodish_error:
+                logger.warning(f"Foodish API调用失败: {foodish_error}")
+            
+            # 方案3: 使用Unsplash美食图片（需要关键词匹配）
+            try:
+                # 提取食材关键词用于搜索
+                if ingredients:
+                    # 使用第一个食材作为关键词
+                    keyword = ingredients[0]
+                else:
+                    keyword = "food"
+                
+                # Unsplash Source API（不需要API key）
+                unsplash_url = f"https://source.unsplash.com/800x600/?food,{keyword},dish"
+                logger.info(f"使用Unsplash美食图片: {unsplash_url}")
+                return unsplash_url
+            except Exception as unsplash_error:
+                logger.warning(f"Unsplash API调用失败: {unsplash_error}")
+
+            
+        except Exception as e:
+            logger.error(f"生成菜品图片失败: {e}")
         
-        # 所有重试都失败
-        raise last_error or Exception("图片生成服务调用失败")
+        # 最终备用方案：返回一个美食主题的占位图
+        # 使用绿色主题，显示菜谱名称和美食emoji
+        import urllib.parse
+        encoded_name = urllib.parse.quote(recipe_name)
+        return f"https://via.placeholder.com/800x600/22c55e/ffffff?text={encoded_name}+%F0%9F%8D%B2"

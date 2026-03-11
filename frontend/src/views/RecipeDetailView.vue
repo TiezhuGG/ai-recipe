@@ -30,7 +30,7 @@
       </div>
 
       <!-- 菜谱详情 -->
-      <RecipeDisplay v-else :recipe="recipe" @saved="handleRecipeSaved" />
+      <RecipeDisplay v-else :recipe="recipe" :show-save-button="false" @saved="handleRecipeSaved" />
     </div>
   </div>
 </template>

@@ -31,8 +31,8 @@ export function useFormPersistence() {
         const parsed = JSON.parse(saved);
         formData.value = {
           ingredients: [],  // 食材不从缓存恢复
-          flavorTags: parsed.flavorTags || '',
-          cuisineTypes: parsed.cuisineTypes || '',
+          flavorTags: '',  // 不从缓存恢复，让用户自行选择
+          cuisineTypes: '',  // 不从缓存恢复，让用户自行选择
           specialGroups: parsed.specialGroups || [],
         };
       }

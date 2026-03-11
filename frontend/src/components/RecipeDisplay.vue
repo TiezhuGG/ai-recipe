@@ -76,6 +76,7 @@
 
     <!-- 保存按钮 -->
     <button
+      v-if="showSaveButton"
       @click="handleSave"
       :disabled="saving"
       class="w-full py-3 px-4 sm:px-6 bg-green-600 text-white rounded-lg font-medium hover:bg-green-500 transition disabled:bg-gray-600 disabled:text-gray-400 touch-target text-sm sm:text-base shadow-lg"
@@ -93,9 +94,12 @@ import type { Recipe } from '@/types'
 // Props
 interface Props {
   recipe: Recipe | null
+  showSaveButton?: boolean  // 是否显示保存按钮，默认true
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  showSaveButton: true
+})
 
 // Emits
 const emit = defineEmits<{

@@ -154,14 +154,12 @@ export class RecipeAPIClient {
    */
   async generateDishImage(recipeName: string, ingredients: string[]): Promise<string> {
     try {
+      // 使用POST请求，将参数放在请求体中
       const response = await apiClient.post<{ success: boolean; image_url: string; message: string }>(
         '/recipes/generate-image',
-        null,
         {
-          params: {
-            recipe_name: recipeName,
-            ingredients: ingredients.join(',')
-          }
+          recipe_name: recipeName,
+          ingredients: ingredients
         }
       )
 
