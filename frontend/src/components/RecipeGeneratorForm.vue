@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import IngredientSelector from './IngredientSelector.vue'
 import FlavorSelector from './FlavorSelector.vue'
 import CuisineSelector from './CuisineSelector.vue'
@@ -66,6 +66,11 @@ import { recipeApi } from '@/services/recipeApi'
 import { useFormPersistence } from '@/composables/useFormPersistence'
 import type { Recipe } from '@/types'
 
+// Props
+const props = defineProps<{
+  initialIngredients?: string[]
+}>()
+
 // Emits
 const emit = defineEmits<{
   'recipeGenerated': [recipe: Recipe]
@@ -73,6 +78,18 @@ const emit = defineEmits<{
 
 // 使用表单持久化
 const { formData } = useFormPersistence()
+
+// 监听初始食材变化，自动填充
+watch(() => props.initialIngredients, (newIngredients) => {
+  if (newIngredients && newIngredients.length > 0) {
+    // 合并初始食材和现有食材，去重
+    const allIngredients = [...new Set([...formData.value.ingredients, ...newIngredients])]
+    formData.value.ingredients = allIngredients
+    
+    // 清空特殊人群选择，让用户重新选择
+    formData.value.specialGroups = []
+  }
+}, { immediate: true })
 
 // 其他状态
 const loading = ref(false)

@@ -257,6 +257,54 @@ export class RecipeAPIClient {
       throw new Error('诊断服务暂时不可用，请稍后重试')
     }
   }
+
+  /**
+   * 根据食材搜索菜谱
+   */
+  async searchByIngredients(ingredients: string[]): Promise<any[]> {
+    try {
+      const response = await apiClient.post<{ recipes: any[] }>(
+        '/search/ingredients',
+        { ingredients }
+      )
+      return response.data.recipes
+    } catch (error) {
+      console.error('搜索菜谱失败:', error)
+      throw new Error('搜索服务暂时不可用，请稍后重试')
+    }
+  }
+
+  /**
+   * 获取食材推荐
+   */
+  async getIngredientRecommendation(ingredients: string[]): Promise<any> {
+    try {
+      const response = await apiClient.post<{ recommendation: any }>(
+        '/search/recommend',
+        { ingredients }
+      )
+      return response.data.recommendation
+    } catch (error) {
+      console.error('获取推荐失败:', error)
+      throw new Error('推荐服务暂时不可用，请稍后重试')
+    }
+  }
+
+  /**
+   * 解析菜谱所需食材
+   */
+  async parseDishIngredients(dishName: string): Promise<any> {
+    try {
+      const response = await apiClient.post<{ dishInfo: any }>(
+        '/search/parse-dish',
+        { dishName }
+      )
+      return response.data.dishInfo
+    } catch (error) {
+      console.error('解析菜谱失败:', error)
+      throw new Error('解析服务暂时不可用，请稍后重试')
+    }
+  }
 }
 
 // 导出单例

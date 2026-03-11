@@ -13,7 +13,10 @@
 
       <!-- 主要内容区域 -->
       <div class="flex flex-col">
-          <RecipeGeneratorForm @recipeGenerated="handleRecipeGenerated" />
+          <RecipeGeneratorForm 
+            :initialIngredients="initialIngredients"
+            @recipeGenerated="handleRecipeGenerated" 
+          />
 
           <div class="mt-5">
 
@@ -36,13 +39,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import NavigationBar from '@/components/NavigationBar.vue'
 import RecipeGeneratorForm from '@/components/RecipeGeneratorForm.vue'
 import RecipeDisplay from '@/components/RecipeDisplay.vue'
 import type { Recipe } from '@/types'
 
+const route = useRoute()
 const generatedRecipe = ref<Recipe | null>(null)
+const initialIngredients = ref<string[]>([])
+
+// 从路由参数获取食材
+onMounted(() => {
+  const ingredientsParam = route.query.ingredients as string
+  if (ingredientsParam) {
+    initialIngredients.value = ingredientsParam.split(',').filter(ing => ing.trim())
+  }
+  
+  // 每次进入主页时，清空specialGroups（特殊人群）
+  // 这样用户每次都需要重新选择，避免上次的选择影响本次生成
+})
 
 function handleRecipeGenerated(recipe: Recipe) {
   generatedRecipe.value = recipe
