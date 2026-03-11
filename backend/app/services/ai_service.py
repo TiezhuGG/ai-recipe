@@ -522,7 +522,7 @@ class AIService:
                 {"role": "user", "content": question}
             ],
             "temperature": 0.7,
-            "max_tokens": 1000,
+            "max_tokens": 2000,  # 增加最大token数
             "stream": True  # 启用流式输出
         }
         
@@ -534,6 +534,7 @@ class AIService:
         logger.info(f"调用AI API回答烹饪问题（流式）")
         logger.info(f"API URL: {self.base_url}/chat/completions")
         logger.info(f"问题: {question}")
+        logger.info(f"最大tokens: {request_body['max_tokens']}")
         
         try:
             async with self.client.stream(
@@ -550,9 +551,15 @@ class AIService:
                 
                 logger.info("开始接收流式响应")
                 
+                total_content = ""
+                chunk_count = 0
+                
                 async for line in response.aiter_lines():
                     if not line or line.strip() == "":
                         continue
+                    
+                    # 记录原始行（用于调试）
+                    logger.debug(f"收到行: {line[:100]}...")  # 只记录前100个字符
                     
                     # 移除 "data: " 前缀
                     if line.startswith("data: "):
@@ -560,23 +567,37 @@ class AIService:
                     
                     # 检查是否是结束标记
                     if line.strip() == "[DONE]":
-                        logger.info("流式响应结束")
+                        logger.info(f"收到结束标记 [DONE]，总共接收 {chunk_count} 个块，{len(total_content)} 个字符")
                         break
                     
                     try:
                         # 解析JSON
                         chunk = json.loads(line)
                         
-                        # 提取内容
+                        # 检查是否有finish_reason
                         if "choices" in chunk and len(chunk["choices"]) > 0:
-                            delta = chunk["choices"][0].get("delta", {})
+                            choice = chunk["choices"][0]
+                            finish_reason = choice.get("finish_reason")
+                            
+                            # 如果有finish_reason且不为null，说明流结束了
+                            if finish_reason is not None:
+                                logger.info(f"流结束，原因: {finish_reason}，总共 {chunk_count} 个块，{len(total_content)} 个字符")
+                                break
+                            
+                            # 提取内容
+                            delta = choice.get("delta", {})
                             content = delta.get("content", "")
                             
                             if content:
+                                chunk_count += 1
+                                total_content += content
                                 yield content
+                                
                     except json.JSONDecodeError as e:
-                        logger.warning(f"解析流式响应失败: {e}, 行内容: {line}")
+                        logger.warning(f"解析流式响应失败: {e}, 行内容: {line[:200]}")
                         continue
+                
+                logger.info(f"✅ 流式响应完成，总共输出 {len(total_content)} 个字符")
                 
         except Exception as e:
             logger.error(f"❌ 流式API调用失败: {e.__class__.__name__} - {e}", exc_info=True)
