@@ -1,27 +1,27 @@
 <template>
-  <MultiSelector
+  <SingleSelector
     label="口味偏好"
     :options="flavorOptions"
-    v-model="selectedFlavors"
+    v-model="selectedFlavor"
   />
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import MultiSelector from './MultiSelector.vue'
+import { computed } from 'vue'
+import SingleSelector from './SingleSelector.vue'
 
 // Props
 interface Props {
-  modelValue: string[]
+  modelValue: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  modelValue: () => [],
+  modelValue: '',
 })
 
 // Emits
 const emit = defineEmits<{
-  'update:modelValue': [value: string[]]
+  'update:modelValue': [value: string]
 }>()
 
 // 口味选项
@@ -38,36 +38,12 @@ const flavorOptions = [
   '宴客菜',
 ]
 
-// 状态
-// const selectedFlavors = ref<string[]>([...props.modelValue])
-
-// // 监听外部变化
-// watch(
-//   () => props.modelValue,
-//   (newValue) => {
-//     selectedFlavors.value = [...newValue]
-//   }
-// )
-
-// // 监听内部变化，同步到外部
-// watch(
-//   selectedFlavors,
-//   (newValue) => {
-//     emit('update:modelValue', newValue)
-//   },
-//   { deep: true }
-// )
-
-const selectedFlavors = computed({
+const selectedFlavor = computed({
   get() {
     return props.modelValue
   },
-  set(newValue: string[]) {
+  set(newValue: string) {
     emit('update:modelValue', newValue)
   }
 })
 </script>
-
-<style scoped>
-/* 组件样式已通过TailwindCSS实现 */
-</style>

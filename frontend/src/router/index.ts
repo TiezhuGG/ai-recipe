@@ -7,6 +7,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/HomeView.vue'),
   },
   {
+    path: '/blind-box',
+    name: 'BlindBox',
+    component: () => import('@/views/BlindBoxView.vue'),
+  },
+  {
     path: '/history',
     name: 'History',
     component: () => import('@/views/HistoryView.vue'),

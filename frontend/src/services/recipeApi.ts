@@ -148,6 +148,33 @@ export class RecipeAPIClient {
       createdAt: data.created_at,
     }
   }
+
+  /**
+   * 生成菜品效果图
+   */
+  async generateDishImage(recipeName: string, ingredients: string[]): Promise<string> {
+    try {
+      const response = await apiClient.post<{ success: boolean; image_url: string; message: string }>(
+        '/recipes/generate-image',
+        null,
+        {
+          params: {
+            recipe_name: recipeName,
+            ingredients: ingredients.join(',')
+          }
+        }
+      )
+
+      if (response.data.success) {
+        return response.data.image_url
+      } else {
+        throw new Error(response.data.message || '生成图片失败')
+      }
+    } catch (error) {
+      console.error('生成菜品图片失败:', error)
+      throw new Error('生成菜品图片失败，请稍后重试')
+    }
+  }
 }
 
 // 导出单例

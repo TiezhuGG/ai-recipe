@@ -231,3 +231,45 @@ async def get_recipe_by_id(
     except Exception as e:
         logger.error(f"获取菜谱详情失败: {e}")
         raise HTTPException(status_code=500, detail=f"获取菜谱失败: {str(e)}")
+
+
+@router.post("/recipes/generate-image")
+async def generate_dish_image(
+    recipe_name: str,
+    ingredients: list[str],
+    recipe_service: RecipeService = Depends(get_recipe_service)
+):
+    """
+    生成菜品效果图
+    
+    Args:
+        recipe_name: 菜谱名称
+        ingredients: 食材列表
+        
+    Returns:
+        dict: 包含图片URL的响应
+        
+    Raises:
+        400: 请求参数无效
+        500: AI服务调用失败
+    """
+    try:
+        if not recipe_name or not ingredients:
+            raise HTTPException(status_code=400, detail="菜谱名称和食材不能为空")
+        
+        # 调用AI服务生成图片
+        image_url = await recipe_service.ai_service.generate_dish_image(recipe_name, ingredients)
+        
+        return {
+            "success": True,
+            "image_url": image_url,
+            "message": "图片生成成功"
+        }
+        
+    except ValueError as e:
+        logger.warning(f"参数验证失败: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"生成菜品图片失败: {e}")
+        raise HTTPException(status_code=500, detail=f"生成图片失败: {str(e)}")
+

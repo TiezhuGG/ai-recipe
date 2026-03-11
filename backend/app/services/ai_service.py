@@ -311,3 +311,81 @@ class AIService:
     async def close(self):
         """关闭HTTP客户端"""
         await self.client.aclose()
+    
+    async def generate_dish_image(self, recipe_name: str, ingredients: List[str]) -> str:
+        """
+        调用豆包API生成菜品效果图
+        
+        Args:
+            recipe_name: 菜谱名称
+            ingredients: 食材列表
+            
+        Returns:
+            str: 生成的图片URL或base64数据
+            
+        Raises:
+            Exception: API调用失败
+        """
+        # 构建图片生成提示词
+        ingredients_str = "、".join(ingredients[:5])  # 只取前5个主要食材
+        prompt = f"一道精美的{recipe_name}，主要食材包括{ingredients_str}，摆盘精致，色彩鲜艳，专业美食摄影风格，高清画质"
+        
+        # 构建请求体（豆包图像生成API格式）
+        request_body = {
+            "model": "doubao-image-generation",  # 图像生成模型
+            "prompt": prompt,
+            "n": 1,  # 生成1张图片
+            "size": "1024x1024",  # 图片尺寸
+            "quality": "standard",
+            "style": "vivid"
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        # 实现重试机制
+        last_error = None
+        for attempt in range(self.max_retries + 1):
+            try:
+                logger.info(f"调用豆包API生成菜品图片 (尝试 {attempt + 1}/{self.max_retries + 1})")
+                
+                response = await self.client.post(
+                    f"{self.base_url}/images/generations",
+                    json=request_body,
+                    headers=headers,
+                    timeout=60.0  # 图片生成可能需要更长时间
+                )
+                
+                if response.status_code == 200:
+                    response_data = response.json()
+                    
+                    # 解析图片URL
+                    if "data" in response_data and len(response_data["data"]) > 0:
+                        image_url = response_data["data"][0].get("url")
+                        if image_url:
+                            logger.info(f"成功生成菜品图片: {image_url}")
+                            return image_url
+                        else:
+                            raise ValueError("响应中未找到图片URL")
+                    else:
+                        raise ValueError("响应格式不正确")
+                else:
+                    error_msg = f"API返回错误状态码: {response.status_code}"
+                    logger.error(f"{error_msg}, 响应: {response.text}")
+                    last_error = Exception(error_msg)
+                    
+            except httpx.TimeoutException as e:
+                logger.error(f"API请求超时: {e}")
+                last_error = Exception("图片生成服务响应超时，请稍后重试")
+            except Exception as e:
+                logger.error(f"API调用失败: {e}")
+                last_error = e
+            
+            # 如果不是最后一次尝试，等待后重试
+            if attempt < self.max_retries:
+                await asyncio.sleep(2)  # 图片生成等待时间更长
+        
+        # 所有重试都失败
+        raise last_error or Exception("图片生成服务调用失败")

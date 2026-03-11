@@ -1,28 +1,38 @@
 <template>
-  <div class="recipe-generator-form bg-white rounded-lg shadow-lg p-4 sm:p-6 space-y-4 sm:space-y-6">
-    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">定制你的专属菜谱</h2>
+  <div class="recipe-generator-form space-y-6">
+    <!-- 步骤1: 输入食材 -->
+    <div class="card-dark p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="bg-primary-500 text-dark-500 font-bold px-3 py-1 rounded-full text-sm">1</span>
+        <h3 class="text-lg font-bold text-primary-500">输入食材</h3>
+      </div>
+      <IngredientSelector v-model="formData.ingredients" />
+    </div>
 
-    <!-- 食材输入 -->
-    <IngredientInput v-model="formData.ingredients" />
+    <!-- 步骤2: 选择菜系 -->
+    <div class="card-dark p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="bg-green-500 text-white font-bold px-3 py-1 rounded-full text-sm">2</span>
+        <h3 class="text-lg font-bold text-green-400">选择菜系</h3>
+      </div>
+      <div class="space-y-4">
+        <FlavorSelector v-model="formData.flavorTags" />
+        <CuisineSelector v-model="formData.cuisineTypes" />
+      </div>
+    </div>
 
-    <!-- 口味选择 -->
-    <FlavorSelector v-model="formData.flavorTags" />
-
-    <!-- 菜系选择 -->
-    <CuisineSelector v-model="formData.cuisineTypes" />
-
-    <!-- 图片上传 -->
-    <ImageUploader
-      v-model="uploadedImage"
-      @ingredientsRecognized="handleIngredientsRecognized"
-    />
-
-    <!-- 特殊人群 -->
-    <SpecialGroupSelector v-model="formData.specialGroups" />
+    <!-- 步骤3: 突出人群 -->
+    <div class="card-dark p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="bg-pink-500 text-white font-bold px-3 py-1 rounded-full text-sm">3</span>
+        <h3 class="text-lg font-bold text-pink-400">突出人群</h3>
+      </div>
+      <SpecialGroupSelector v-model="formData.specialGroups" />
+    </div>
 
     <!-- 错误提示 -->
-    <div v-if="error" class="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
-      <p class="text-xs sm:text-sm text-red-600">{{ error }}</p>
+    <div v-if="error" class="p-4 bg-red-900/50 border border-red-500 rounded-lg">
+      <p class="text-sm text-red-300">{{ error }}</p>
     </div>
 
     <!-- 生成按钮 -->
@@ -30,30 +40,27 @@
       @click="handleGenerate"
       :disabled="loading || !canGenerate"
       :class="[
-        'w-full py-3 sm:py-4 px-4 sm:px-6 rounded-lg font-medium text-base sm:text-lg transition-all touch-target',
+        'w-full py-4 px-6 rounded-lg font-bold text-lg transition-all flex items-center justify-center gap-2',
         loading || !canGenerate
-          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          : 'bg-primary-500 text-white hover:bg-primary-600 shadow-lg hover:shadow-xl'
+          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+          : 'bg-primary-500 text-dark-500 hover:bg-primary-400 shadow-lg hover:shadow-xl'
       ]"
     >
-      <span v-if="loading" class="flex items-center justify-center gap-2">
-        <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        生成中...
-      </span>
-      <span v-else>🍳 生成菜谱</span>
+      <svg v-if="loading" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span v-if="loading">生成菜谱中...</span>
+      <span v-else>✨ 交给大厨</span>
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import IngredientInput from './IngredientInput.vue'
+import IngredientSelector from './IngredientSelector.vue'
 import FlavorSelector from './FlavorSelector.vue'
 import CuisineSelector from './CuisineSelector.vue'
-import ImageUploader from './ImageUploader.vue'
 import SpecialGroupSelector from './SpecialGroupSelector.vue'
 import { recipeApi } from '@/services/recipeApi'
 import { useFormPersistence } from '@/composables/useFormPersistence'
@@ -67,33 +74,21 @@ const emit = defineEmits<{
 // 使用表单持久化
 const { formData } = useFormPersistence()
 
-// 其他状态（不需要持久化）
-const uploadedImage = ref<File | null>(null)
+// 其他状态
 const loading = ref(false)
 const error = ref('')
 
-// 识别的食材（临时状态，不持久化）
-const recognizedIngredients = ref<string[]>([])
-
 // 是否可以生成（至少有一个食材）
 const canGenerate = computed(() => {
-  return formData.value.ingredients.length > 0 || 
-         recognizedIngredients.value.length > 0
+  return formData.value.ingredients.length > 0
 })
-
-/**
- * 处理图片识别的食材
- */
-function handleIngredientsRecognized(ingredients: string[]) {
-  recognizedIngredients.value = ingredients
-}
 
 /**
  * 生成菜谱
  */
 async function handleGenerate() {
   if (!canGenerate.value) {
-    error.value = '请至少输入一个食材或上传食材图片'
+    error.value = '请至少选择一个食材'
     return
   }
 
@@ -103,10 +98,10 @@ async function handleGenerate() {
   try {
     const recipe = await recipeApi.generateRecipe({
       ingredients: formData.value.ingredients,
-      flavor_tags: formData.value.flavorTags,
-      cuisine_types: formData.value.cuisineTypes,
+      flavor_tags: formData.value.flavorTags ? [formData.value.flavorTags] : [],
+      cuisine_types: formData.value.cuisineTypes ? [formData.value.cuisineTypes] : [],
       special_groups: formData.value.specialGroups,
-      recognized_ingredients: recognizedIngredients.value,
+      recognized_ingredients: [],
     })
 
     emit('recipeGenerated', recipe)

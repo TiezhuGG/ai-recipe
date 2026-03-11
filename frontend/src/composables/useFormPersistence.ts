@@ -3,21 +3,21 @@ import { ref, watch, onMounted } from "vue";
 const STORAGE_KEY = "recipe_form_data";
 
 interface FormData {
-  ingredients: string[];
-  flavorTags: string[];
-  cuisineTypes: string[];
-  specialGroups: string[];
+  ingredients: string[]
+  flavorTags: string
+  cuisineTypes: string
+  specialGroups: string[]
 }
 
 /**
  * 表单数据持久化 Composable
- * 自动保存和恢复表单输入数据到 localStorage
+ * 只持久化口味、菜系和特殊人群，不持久化食材
  */
 export function useFormPersistence() {
   const formData = ref<FormData>({
-    ingredients: [],
-    flavorTags: [],
-    cuisineTypes: [],
+    ingredients: [],  // 不持久化
+    flavorTags: '',
+    cuisineTypes: '',
     specialGroups: [],
   });
 
@@ -30,9 +30,9 @@ export function useFormPersistence() {
       if (saved) {
         const parsed = JSON.parse(saved);
         formData.value = {
-          ingredients: parsed.ingredients || [],
-          flavorTags: parsed.flavorTags || [],
-          cuisineTypes: parsed.cuisineTypes || [],
+          ingredients: [],  // 食材不从缓存恢复
+          flavorTags: parsed.flavorTags || '',
+          cuisineTypes: parsed.cuisineTypes || '',
           specialGroups: parsed.specialGroups || [],
         };
       }
@@ -42,11 +42,17 @@ export function useFormPersistence() {
   }
 
   /**
-   * 保存数据到 localStorage
+   * 保存数据到 localStorage（不保存食材）
    */
   function saveToStorage(data: FormData) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      const dataToSave = {
+        flavorTags: data.flavorTags,
+        cuisineTypes: data.cuisineTypes,
+        specialGroups: data.specialGroups,
+        // 不保存 ingredients
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
     } catch (error) {
       console.error("Failed to save form data to localStorage:", error);
     }
@@ -60,8 +66,8 @@ export function useFormPersistence() {
       localStorage.removeItem(STORAGE_KEY);
       formData.value = {
         ingredients: [],
-        flavorTags: [],
-        cuisineTypes: [],
+        flavorTags: '',
+        cuisineTypes: '',
         specialGroups: [],
       };
     } catch (error) {
@@ -74,13 +80,13 @@ export function useFormPersistence() {
     loadFromStorage();
   });
 
-  // 监听数据变化，自动保存
+  // 监听数据变化，自动保存（使用 flush: 'post' 避免递归更新）
   watch(
     () => formData.value,
     (newValue) => {
       saveToStorage(newValue);
     },
-    { deep: true },
+    { deep: true, flush: 'post' },
   );
 
   return {
