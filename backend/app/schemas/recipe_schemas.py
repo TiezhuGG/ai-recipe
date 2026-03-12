@@ -33,6 +33,7 @@ class GenerateRecipeRequest(BaseModel):
     cuisine_types: List[str] = Field(default_factory=list, description="菜系类型")
     special_groups: List[str] = Field(default_factory=list, description="特殊人群")
     recognized_ingredients: Optional[List[str]] = Field(None, description="图片识别的食材")
+    recipe_name: Optional[str] = Field(None, description="指定的菜谱名称")
 
 
 class RecipeResponse(BaseModel):

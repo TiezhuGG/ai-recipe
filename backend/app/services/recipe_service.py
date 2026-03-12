@@ -128,7 +128,8 @@ class RecipeService:
         flavor_tags: List[str],
         cuisine_types: List[str],
         special_groups: List[str],
-        recognized_ingredients: Optional[List[str]] = None
+        recognized_ingredients: Optional[List[str]] = None,
+        recipe_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         生成菜谱的完整流程
@@ -139,6 +140,7 @@ class RecipeService:
             cuisine_types: 菜系类型列表
             special_groups: 特殊人群列表
             recognized_ingredients: 图片识别的食材列表
+            recipe_name: 指定的菜谱名称
             
         Returns:
             Dict[str, Any]: 生成的菜谱数据
@@ -155,7 +157,7 @@ class RecipeService:
         
         # 2. 合并所有食材
         all_ingredients = list(set((ingredients or []) + (recognized_ingredients or [])))
-        logger.info(f"生成菜谱 - 食材: {all_ingredients}, 口味: {flavor_tags}, 菜系: {cuisine_types}")
+        logger.info(f"生成菜谱 - 食材: {all_ingredients}, 口味: {flavor_tags}, 菜系: {cuisine_types}, 菜谱名称: {recipe_name}")
         
         # 3. 调用AI服务生成菜谱
         try:
@@ -163,7 +165,8 @@ class RecipeService:
                 ingredients=all_ingredients,
                 flavor_tags=flavor_tags,
                 cuisine_types=cuisine_types,
-                special_groups=special_groups
+                special_groups=special_groups,
+                recipe_name=recipe_name
             )
         except Exception as e:
             logger.error(f"AI生成菜谱失败: {e}")

@@ -463,7 +463,7 @@ const sortedResults = computed(() => {
   switch (sortBy.value) {
     case 'difficulty':
       return results.sort((a, b) => {
-        const order = { easy: 1, medium: 2, hard: 3 }
+        const order: Record<string, number> = { easy: 1, medium: 2, hard: 3 }
         return order[a.difficulty] - order[b.difficulty]
       })
     case 'time':

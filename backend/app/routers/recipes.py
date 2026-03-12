@@ -81,7 +81,8 @@ async def generate_recipe(
             flavor_tags=request.flavor_tags,
             cuisine_types=request.cuisine_types,
             special_groups=request.special_groups,
-            recognized_ingredients=request.recognized_ingredients
+            recognized_ingredients=request.recognized_ingredients,
+            recipe_name=request.recipe_name
         )
         
         return RecipeResponse(**recipe_data)

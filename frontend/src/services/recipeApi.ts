@@ -5,7 +5,6 @@ import apiClient from './api'
 import type {
   GenerateRecipeRequest,
   RecipeResponse,
-  SaveRecipeRequest,
   SaveRecipeResponse,
   RecipeHistoryResponse,
   ImageRecognitionResponse,

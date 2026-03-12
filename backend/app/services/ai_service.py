@@ -28,7 +28,8 @@ class AIService:
         ingredients: List[str],
         flavor_tags: List[str],
         cuisine_types: List[str],
-        special_groups: List[str]
+        special_groups: List[str],
+        recipe_name: Optional[str] = None
     ) -> str:
         """
         构建菜谱生成的提示词
@@ -38,6 +39,7 @@ class AIService:
             flavor_tags: 口味标签列表
             cuisine_types: 菜系类型列表
             special_groups: 特殊人群列表
+            recipe_name: 指定的菜谱名称
             
         Returns:
             str: 构建好的提示词
@@ -45,6 +47,10 @@ class AIService:
         prompt_parts = [
             "请根据以下信息生成一个详细的菜谱：\n"
         ]
+        
+        # 如果指定了菜谱名称，优先使用
+        if recipe_name:
+            prompt_parts.append(f"菜谱名称：{recipe_name}（请严格按照这个名称生成对应的菜谱）")
         
         # 添加食材信息
         if ingredients:
@@ -67,7 +73,7 @@ class AIService:
             prompt_parts.append(f"特殊人群：{groups_str}（请在安全提示中特别注意）")
         
         prompt_parts.append("\n请以JSON格式返回菜谱，包含以下字段：")
-        prompt_parts.append("- name: 菜谱名称")
+        prompt_parts.append(f"- name: 菜谱名称" + (f"（必须是：{recipe_name}）" if recipe_name else ""))
         prompt_parts.append("- ingredients: 食材对象，包含main（主料数组）和secondary（配料数组），每个食材包含name、amount、unit")
         prompt_parts.append("- steps: 步骤数组，每个步骤包含order（序号）和description（描述）")
         prompt_parts.append("- difficulty: 难度（easy/medium/hard）")
@@ -136,7 +142,8 @@ class AIService:
         ingredients: List[str],
         flavor_tags: List[str],
         cuisine_types: List[str],
-        special_groups: List[str]
+        special_groups: List[str],
+        recipe_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         调用豆包API生成菜谱
@@ -146,6 +153,7 @@ class AIService:
             flavor_tags: 口味标签列表
             cuisine_types: 菜系类型列表
             special_groups: 特殊人群列表
+            recipe_name: 指定的菜谱名称
             
         Returns:
             Dict[str, Any]: 生成的菜谱数据
@@ -153,7 +161,7 @@ class AIService:
         Raises:
             Exception: API调用失败
         """
-        prompt = self._build_recipe_prompt(ingredients, flavor_tags, cuisine_types, special_groups)
+        prompt = self._build_recipe_prompt(ingredients, flavor_tags, cuisine_types, special_groups, recipe_name)
         # 构建请求体（豆包API格式）
         request_body = {
             "model": self.model,

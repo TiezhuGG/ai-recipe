@@ -15,6 +15,7 @@
       <div class="flex flex-col">
           <RecipeGeneratorForm 
             :initialIngredients="initialIngredients"
+            :initialRecipeName="initialRecipeName"
             @recipeGenerated="handleRecipeGenerated" 
           />
 
@@ -49,12 +50,18 @@ import type { Recipe } from '@/types'
 const route = useRoute()
 const generatedRecipe = ref<Recipe | null>(null)
 const initialIngredients = ref<string[]>([])
+const initialRecipeName = ref<string>('')
 
-// 从路由参数获取食材
+// 从路由参数获取食材和菜谱名称
 onMounted(() => {
   const ingredientsParam = route.query.ingredients as string
   if (ingredientsParam) {
     initialIngredients.value = ingredientsParam.split(',').filter(ing => ing.trim())
+  }
+  
+  const recipeNameParam = route.query.recipeName as string
+  if (recipeNameParam) {
+    initialRecipeName.value = recipeNameParam
   }
   
   // 每次进入主页时，清空specialGroups（特殊人群）

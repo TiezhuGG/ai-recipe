@@ -69,6 +69,7 @@ import type { Recipe } from '@/types'
 // Props
 const props = defineProps<{
   initialIngredients?: string[]
+  initialRecipeName?: string
 }>()
 
 // Emits
@@ -113,13 +114,20 @@ async function handleGenerate() {
   error.value = ''
 
   try {
-    const recipe = await recipeApi.generateRecipe({
+    const requestData: any = {
       ingredients: formData.value.ingredients,
       flavor_tags: formData.value.flavorTags ? [formData.value.flavorTags] : [],
       cuisine_types: formData.value.cuisineTypes ? [formData.value.cuisineTypes] : [],
       special_groups: formData.value.specialGroups,
       recognized_ingredients: [],
-    })
+    }
+    
+    // 如果有指定的菜谱名称，添加到请求中
+    if (props.initialRecipeName) {
+      requestData.recipe_name = props.initialRecipeName
+    }
+
+    const recipe = await recipeApi.generateRecipe(requestData)
 
     emit('recipeGenerated', recipe)
   } catch (err: any) {
