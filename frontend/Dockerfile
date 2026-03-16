@@ -1,5 +1,6 @@
-# syntax=docker/dockerfile:1
 ARG NODE_BASE_IMAGE=node:18-alpine
+ARG NGINX_BASE_IMAGE=nginx:alpine
+
 FROM ${NODE_BASE_IMAGE} AS builder
 
 WORKDIR /app
@@ -10,7 +11,6 @@ RUN npm install
 
 COPY . .
 
-ARG NGINX_BASE_IMAGE=nginx:alpine
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
