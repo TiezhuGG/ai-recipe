@@ -1,141 +1,146 @@
-# AI智能菜谱生成平台 - 前端
+# Frontend App
 
-基于Vue3 + TypeScript + Vite + TailwindCSS的前端应用。
+## 🎨 AI 菜谱平台前端
 
-## 技术栈
+基于 Vue 3 + TypeScript + Vite 构建的单页应用，负责用户交互、页面编排、菜谱展示、图片上传与烹饪辅助体验。
 
-- Vue 3.4+ (组合式API)
-- TypeScript 5.3+
-- Vite 5.0+ (构建工具)
-- Vue Router 4.2+ (路由管理)
-- Pinia 2.1+ (状态管理)
-- Axios (HTTP客户端)
-- TailwindCSS 3.4+ (CSS框架)
+## ✨ Pages
 
-## 项目结构
+- `首页`：AI 菜谱生成主流程
+- `美食盲盒`：随机菜品选择体验
+- `烹饪学堂`：实时问答与问题诊断
+- `随料大搜`：按食材搜索 / 推荐 / 解析菜品所需食材
+- `历史记录`：查看已保存菜谱
+- `菜谱详情`：展示单条菜谱完整信息
 
-```
+## 🛠️ Stack
+
+[![Vue](https://img.shields.io/badge/Vue-3.4-42b883?logo=vue.js&logoColor=white)](../frontend)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?logo=typescript&logoColor=white)](../frontend)
+[![Vite](https://img.shields.io/badge/Vite-5.x-646cff?logo=vite&logoColor=white)](../frontend)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06b6d4?logo=tailwindcss&logoColor=white)](../frontend)
+
+- Vue 3
+- TypeScript
+- Vite
+- Vue Router
+- Axios
+- Tailwind CSS
+- Pinia
+
+## 📁 Structure
+
+```text
 frontend/
-├── src/
-│   ├── components/     # Vue组件
-│   ├── views/          # 页面组件
-│   ├── router/         # 路由配置
-│   ├── services/       # API服务
-│   ├── types/          # TypeScript类型
-│   ├── composables/    # 组合式函数
-│   ├── App.vue         # 根组件
-│   ├── main.ts         # 应用入口
-│   └── style.css       # 全局样式
-├── public/             # 静态资源
-├── index.html          # HTML模板
-├── vite.config.ts      # Vite配置
-├── tailwind.config.js  # TailwindCSS配置
-├── tsconfig.json       # TypeScript配置
-└── package.json        # 依赖配置
+├─ src/
+│  ├─ components/        # 通用组件
+│  ├─ views/             # 页面级视图
+│  ├─ router/            # 路由定义
+│  ├─ services/          # API 请求封装
+│  ├─ composables/       # 组合式逻辑
+│  ├─ types/             # 类型定义
+│  ├─ App.vue
+│  └─ main.ts
+├─ nginx.conf            # 生产反向代理配置
+├─ Dockerfile
+├─ package.json
+└─ README.md
 ```
 
-## 快速开始
+## 🚀 Start Development
 
-### 1. 安装依赖
+### 1. Install dependencies
 
 ```bash
 cd frontend
 npm install
 ```
 
-### 2. 启动开发服务器
+### 2. Run dev server
 
 ```bash
 npm run dev
 ```
 
-应用将在 http://localhost:5173 启动。
+默认访问地址：`http://localhost:5173`
 
-### 3. 构建生产版本
+### 3. Build for production
 
 ```bash
 npm run build
 ```
 
-构建产物将输出到 `dist/` 目录。
-
-### 4. 预览生产构建
+### 4. Preview production build
 
 ```bash
 npm run preview
 ```
 
-## 开发说明
+## 🧭 Routes
 
-### 路由
+- `/`
+- `/blind-box`
+- `/cooking-school`
+- `/search`
+- `/history`
+- `/recipe/:id`
 
-- `/` - 主页（菜谱生成）
-- `/history` - 历史记录
-- `/recipe/:id` - 菜谱详情
+## 🔗 API Communication
 
-### API代理
+开发环境下，前端通过配置或代理访问后端。
 
-开发环境下，Vite会自动代理API请求到后端服务器：
+### 本地开发
 
-- `/api/*` → `http://localhost:8000/api/*`
-- `/uploads/*` → `http://localhost:8000/uploads/*`
+- 前端：`http://localhost:5173`
+- 后端：`http://localhost:8000`
 
-### 组件开发
+### Docker / Production
 
-所有组件使用Vue3组合式API（`<script setup>`）和TypeScript。
+生产环境默认通过 `frontend/nginx.conf` 把以下路径代理到后端：
 
-示例：
+- `/api/`
+- `/uploads/`
+- `/health`
+- `/docs`
+- `/redoc`
+- `/openapi.json`
 
-```vue
-<template>
-  <div class="my-component">
-    <h1>{{ title }}</h1>
-  </div>
-</template>
+如果根目录 `.env` 中 `VITE_API_BASE_URL` 留空，前端会优先使用同源反向代理。
 
-<script setup lang="ts">
-import { ref } from 'vue'
+## 🧩 Key UI Modules
 
-const title = ref('Hello World')
-</script>
+- `RecipeGeneratorForm`：首页主流程表单
+- `RecipeDisplay`：菜谱结果展示
+- `ImageUploader`：图片上传与识别入口
+- `NavigationBar` / `ModernNavigation`：导航系统
+- `RecipeHistory`：历史菜谱列表
+- `SkillDetailModal`：交互式详情弹窗
 
-<style scoped>
-.my-component {
-  /* 样式 */
-}
-</style>
+## 📌 Notes
+
+- 美食盲盒中的 `效果图功能` 已暂时关闭，页面会展示静态提示，不再触发生成接口。
+- 页面已适配 Docker 部署下的 Nginx 反代路径。
+- 如需切换接口地址，优先调整根目录 `.env` 中的 `VITE_API_BASE_URL`。
+
+## 🐳 Docker Build
+
+前端容器会在构建阶段注入：
+
+```env
+VITE_API_BASE_URL=
 ```
 
-### 样式
+如果留空，则生产环境通过 Nginx 同源代理调用后端；这也是当前推荐配置。
 
-使用TailwindCSS工具类进行样式开发。
+## 🧪 Common Commands
 
-常用类：
-- 布局: `flex`, `grid`, `container`
-- 间距: `p-4`, `m-2`, `space-x-4`
-- 颜色: `bg-white`, `text-gray-600`
-- 响应式: `md:flex`, `lg:grid-cols-3`
+```bash
+npm run dev
+npm run build
+npm run preview
+```
 
-## 待实现功能
+## 📄 Related Docs
 
-- [ ] 食材输入组件
-- [ ] 口味和菜系选择器
-- [ ] 图片上传组件
-- [ ] 特殊人群选择器
-- [ ] 菜谱展示组件
-- [ ] 历史记录组件
-- [ ] API客户端服务
-- [ ] 状态管理
-- [ ] 响应式设计
-
-## 注意事项
-
-1. 确保后端服务在 http://localhost:8000 运行
-2. 使用组合式API和TypeScript
-3. 遵循Vue3最佳实践
-4. 使用TailwindCSS进行样式开发
-5. 确保响应式设计（移动端、平板、桌面）
-
-## 下一步
-
-继续实现任务10-20的前端组件和功能。
+- [Root README](../README.md)
+- [Backend README](../backend/README.md)
