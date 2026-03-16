@@ -50,6 +50,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+POSTGRES_INIT_LOCK_ID = 42857831
+
 
 def get_db():
     """Provide a request-scoped database session."""
@@ -65,7 +67,19 @@ def init_db():
     try:
         from app.models import recipe, user  # noqa: F401
 
-        Base.metadata.create_all(bind=engine)
+        if DATABASE_URL.startswith("postgresql"):
+            # Multiple Uvicorn workers can run startup concurrently. Serialize
+            # table creation with a PostgreSQL advisory lock to avoid duplicate
+            # catalog entries during first boot.
+            with engine.begin() as connection:
+                connection.exec_driver_sql(f"SELECT pg_advisory_lock({POSTGRES_INIT_LOCK_ID})")
+                try:
+                    Base.metadata.create_all(bind=connection)
+                finally:
+                    connection.exec_driver_sql(f"SELECT pg_advisory_unlock({POSTGRES_INIT_LOCK_ID})")
+        else:
+            Base.metadata.create_all(bind=engine)
+
         logger.info("Database tables are ready")
 
         os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
