@@ -4,5 +4,6 @@
 *.yml text eol=lf
 *.yaml text eol=lf
 Dockerfile text eol=lf
+*.conf text eol=lf
 *.py text eol=lf
 *.vue text eol=lf
