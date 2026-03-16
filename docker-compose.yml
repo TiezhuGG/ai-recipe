@@ -1,8 +1,6 @@
-﻿version: '3.8'
-
 services:
   db:
-    image: postgres:15-alpine
+    image: ${POSTGRES_IMAGE:-postgres:15-alpine}
     container_name: recipe-db
     restart: always
     environment:
@@ -23,6 +21,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        PYTHON_BASE_IMAGE: ${PYTHON_BASE_IMAGE:-python:3.11-slim}
     container_name: recipe-backend
     restart: always
     environment:
@@ -66,6 +66,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
+        NODE_BASE_IMAGE: ${NODE_BASE_IMAGE:-node:18-alpine}
+        NGINX_BASE_IMAGE: ${NGINX_BASE_IMAGE:-nginx:alpine}
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
     container_name: recipe-frontend
     restart: always
