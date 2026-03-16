@@ -1,20 +1,23 @@
-#!/bin/bash
-# 前端构建脚本
+#!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-echo "🚀 开始构建前端..."
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=./common.sh
+. "${SCRIPT_DIR}/common.sh"
 
-# 进入前端目录
-cd frontend
+ensure_project_root
+load_env
 
-# 安装依赖
-echo "📦 安装依赖..."
+require_command npm
+
+cd "${PROJECT_ROOT}/frontend"
+
+log_section "Installing frontend dependencies"
 npm ci
 
-# 运行构建
-echo "🔨 构建生产版本..."
+log_section "Building frontend"
 npm run build
 
-echo "✅ 前端构建完成！"
-echo "📁 构建产物位于: frontend/dist"
+log_info "Frontend build completed: ${PROJECT_ROOT}/frontend/dist"
+

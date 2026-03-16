@@ -1,69 +1,70 @@
-#!/bin/bash
-# Docker 部署脚本
+#!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-echo "🐳 开始 Docker 部署..."
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=./common.sh
+. "${SCRIPT_DIR}/common.sh"
 
-# 检查 Docker 和 Docker Compose
-if ! command -v docker &> /dev/null; then
-    echo "❌ Docker 未安装，请先安装 Docker"
-    exit 1
+ensure_project_root
+load_env
+
+require_command docker
+require_command curl
+compose version >/dev/null
+
+ENV_FILE=${ENV_FILE:-"${PROJECT_ROOT}/.env"}
+
+if [ ! -f "${ENV_FILE}" ]; then
+  if [ -f "${PROJECT_ROOT}/.env.example" ]; then
+    cp "${PROJECT_ROOT}/.env.example" "${ENV_FILE}"
+    log_warn "${ENV_FILE} was missing, so a template was copied from .env.example"
+  fi
+
+  log_error "Please review ${ENV_FILE} and fill in real values before deploying"
+  exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
-    echo "❌ Docker Compose 未安装，请先安装 Docker Compose"
-    exit 1
+required_vars=(
+  POSTGRES_DB
+  POSTGRES_USER
+  POSTGRES_PASSWORD
+  DATABASE_URL
+  LLM_API_KEY
+  LLM_BASE_URL
+  MODEL_NAME
+  SECRET_KEY
+)
+
+missing_vars=()
+for var_name in "${required_vars[@]}"; do
+  if [ -z "${!var_name:-}" ]; then
+    missing_vars+=("${var_name}")
+  fi
+done
+
+if [ "${#missing_vars[@]}" -gt 0 ]; then
+  log_error "Missing required variables in ${ENV_FILE}: ${missing_vars[*]}"
+  exit 1
 fi
 
-# 检查 .env 文件
-if [ ! -f ".env" ]; then
-    echo "⚠️  警告: .env 文件不存在，创建默认配置..."
-    cat > .env << EOF
-# 数据库配置
-DB_PASSWORD=change_me_in_production
+log_section "Validating Docker Compose configuration"
+compose config >/dev/null
 
-# 豆包 API 配置
-LLM_API_KEY=your_api_key_here
-DOUBAO_API_URL=https://ark.cn-beijing.volces.com/api/v3
+log_section "Building and starting containers"
+compose up -d --build --remove-orphans
 
-# 安全配置
-SECRET_KEY=change_me_in_production
+log_section "Waiting for services"
+wait_for_http_ok "http://localhost:8000/health" 90 "backend"
+wait_for_http_ok "http://localhost/nginx-health" 90 "frontend"
 
-# 前端配置
-VITE_API_BASE_URL=http://localhost:8000
-EOF
-    echo "⚠️  请编辑 .env 文件并填入正确的配置"
-    exit 1
-fi
+log_section "Container status"
+compose ps
 
-# 停止现有容器
-echo "🛑 停止现有容器..."
-docker-compose down
+log_section "Recent logs"
+compose logs --tail=30 backend frontend db
 
-# 构建镜像
-echo "🔨 构建 Docker 镜像..."
-docker-compose build
+log_info "Deployment finished"
+log_info "Frontend: http://localhost"
+log_info "Backend:  http://localhost:8000"
 
-# 启动服务
-echo "🚀 启动服务..."
-docker-compose up -d
-
-# 等待服务启动
-echo "⏳ 等待服务启动..."
-sleep 10
-
-# 检查服务状态
-echo "🔍 检查服务状态..."
-docker-compose ps
-
-# 显示日志
-echo "📋 服务日志:"
-docker-compose logs --tail=50
-
-echo "✅ Docker 部署完成！"
-echo "🌐 前端地址: http://localhost"
-echo "🔌 后端地址: http://localhost:8000"
-echo ""
-echo "查看日志: docker-compose logs -f"
-echo "停止服务: docker-compose down"

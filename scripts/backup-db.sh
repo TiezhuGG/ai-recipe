@@ -1,40 +1,37 @@
-#!/bin/bash
-# 数据库备份脚本
+#!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-echo "💾 开始数据库备份..."
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=./common.sh
+. "${SCRIPT_DIR}/common.sh"
 
-# 配置
-BACKUP_DIR="${BACKUP_DIR:-./backups}"
+ensure_project_root
+load_env
+
+BACKUP_DIR=${BACKUP_DIR:-"${PROJECT_ROOT}/backups"}
+RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-7}
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="${BACKUP_DIR}/recipe_db_${TIMESTAMP}.sql"
 
-# 创建备份目录
 mkdir -p "${BACKUP_DIR}"
 
-# 检查是否使用 Docker
-if docker ps | grep -q recipe-db; then
-    echo "🐳 使用 Docker 备份..."
-    docker exec recipe-db pg_dump -U recipe_user recipe_db > "${BACKUP_FILE}"
+if command -v docker >/dev/null 2>&1 && compose_service_exists db && compose_service_running db; then
+  log_section "Creating PostgreSQL backup from Docker"
+  compose exec -T db pg_dump -U "${POSTGRES_USER:-recipe_user}" -d "${POSTGRES_DB:-recipe_db}" > "${BACKUP_FILE}"
 else
-    echo "💻 使用本地 PostgreSQL 备份..."
-    # 从环境变量读取数据库配置
-    DB_USER="${DB_USER:-recipe_user}"
-    DB_NAME="${DB_NAME:-recipe_db}"
-    DB_HOST="${DB_HOST:-localhost}"
-    
-    pg_dump -U "${DB_USER}" -h "${DB_HOST}" "${DB_NAME}" > "${BACKUP_FILE}"
+  log_section "Creating PostgreSQL backup from local connection"
+  require_command pg_dump
+  PGPASSWORD="${POSTGRES_PASSWORD:-}" pg_dump \
+    -h "${DB_HOST:-localhost}" \
+    -p "${DB_PORT:-5432}" \
+    -U "${POSTGRES_USER:-recipe_user}" \
+    -d "${POSTGRES_DB:-recipe_db}" > "${BACKUP_FILE}"
 fi
 
-# 压缩备份文件
-echo "🗜️  压缩备份文件..."
-gzip "${BACKUP_FILE}"
+gzip -f "${BACKUP_FILE}"
+find "${BACKUP_DIR}" -name 'recipe_db_*.sql.gz' -mtime +"${RETENTION_DAYS}" -delete
 
-echo "✅ 数据库备份完成: ${BACKUP_FILE}.gz"
+log_info "Backup created: ${BACKUP_FILE}.gz"
+log_info "Retention cleanup finished: ${RETENTION_DAYS} days"
 
-# 清理旧备份（保留最近7天）
-echo "🧹 清理旧备份..."
-find "${BACKUP_DIR}" -name "recipe_db_*.sql.gz" -mtime +7 -delete
-
-echo "✅ 备份任务完成！"

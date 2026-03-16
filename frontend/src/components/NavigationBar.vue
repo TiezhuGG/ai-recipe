@@ -64,11 +64,11 @@
       >
         🔍 随料大搜
       </button>
-      <button
+      <!-- <button
         class="px-4 py-2 bg-dark-400 text-gray-300 rounded-lg hover:bg-dark-300 transition border border-gray-600"
       >
         ⋯ 更多
-      </button>
+      </button> -->
     </div>
   </div>
 </template>

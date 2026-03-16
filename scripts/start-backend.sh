@@ -1,36 +1,48 @@
-#!/bin/bash
-# 后端启动脚本
+#!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-echo "🚀 启动后端服务..."
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=./common.sh
+. "${SCRIPT_DIR}/common.sh"
 
-# 进入后端目录
-cd backend
+BACKEND_DIR="${PROJECT_ROOT}/backend"
+ENV_FILE=${ENV_FILE:-"${BACKEND_DIR}/.env"}
 
-# 检查虚拟环境
-if [ ! -d "venv" ]; then
-    echo "📦 创建虚拟环境..."
-    python -m venv venv
+cd "${BACKEND_DIR}"
+
+require_command python
+
+if [ ! -d ".venv" ]; then
+  log_section "Creating local virtual environment"
+  python -m venv .venv
 fi
 
-# 激活虚拟环境
-echo "🔧 激活虚拟环境..."
-source venv/bin/activate
+# shellcheck disable=SC1091
+. .venv/bin/activate
 
-# 安装依赖
-echo "📦 安装依赖..."
-pip install -r requirements.txt
+log_section "Installing backend dependencies"
+python -m pip install -r requirements.txt
 
-# 检查环境变量
-if [ ! -f ".env" ]; then
-    echo "⚠️  警告: .env 文件不存在，使用 .env.example"
-    cp .env.example .env
+if [ ! -f "${ENV_FILE}" ] && [ -f ".env.example" ]; then
+  cp .env.example "${ENV_FILE}"
+  log_warn "Created ${ENV_FILE} from backend/.env.example. Review it before using production credentials."
 fi
 
-# 创建必要的目录
+set -a
+if [ -f "${ENV_FILE}" ]; then
+  # shellcheck disable=SC1090
+  . "${ENV_FILE}"
+fi
+set +a
+
 mkdir -p uploads logs
 
-# 启动服务
-echo "🚀 启动 FastAPI 服务..."
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+log_section "Initializing database"
+python -c 'from app.core.database import init_db; init_db()'
+
+log_section "Starting FastAPI server"
+exec uvicorn main:app \
+  --host "${BACKEND_HOST:-0.0.0.0}" \
+  --port "${BACKEND_PORT:-8000}" \
+  --reload

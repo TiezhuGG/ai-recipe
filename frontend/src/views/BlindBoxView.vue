@@ -215,34 +215,19 @@
             </ol>
           </div>
 
-          <!-- 菜品效果图 -->
-          <div class="mb-6">
+          <!-- 菜品效果图（暂时关闭） -->
+          <!-- <div class="mb-6">
             <div class="flex items-center gap-2 mb-3">
               <span class="text-xl">🖼️</span>
               <h3 class="text-xl font-semibold text-gray-200">菜品效果图</h3>
             </div>
-            
-            <div v-if="generatedImage" class="relative">
-              <img :src="generatedImage" :alt="generatedRecipe.name" class="w-full rounded-lg" />
+
+            <div class="bg-dark-400 rounded-lg p-12 text-center border-2 border-dashed border-gray-600">
+              <div class="text-5xl mb-4">📴</div>
+              <p class="text-gray-300 mb-2">效果图功能已暂时关闭</p>
+              <p class="text-sm text-gray-500">为避免生成与菜名不匹配的图片，当前版本先隐藏此功能入口。</p>
             </div>
-            <div v-else class="bg-dark-400 rounded-lg p-12 text-center border-2 border-dashed border-gray-600">
-              <div class="text-5xl mb-4">📷</div>
-              <p class="text-gray-400 mb-4">暂无效果图</p>
-              <button
-                @click="generateDishImage"
-                :disabled="generatingImage"
-                :class="[
-                  'px-6 py-3 rounded-lg font-medium transition',
-                  generatingImage
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-500'
-                ]"
-              >
-                <span v-if="generatingImage">生成中...</span>
-                <span v-else>✨ 生成效果图</span>
-              </button>
-            </div>
-          </div>
+          </div> -->
 
           <!-- 操作按钮 -->
           <div class="flex gap-4">
@@ -279,9 +264,7 @@ const selectedPreferences = ref<string[]>([])
 const randomIngredients = ref<string[]>([])
 const randomChef = ref({ name: '', specialty: '' })
 const generatedRecipe = ref<Recipe | null>(null)
-const generatedImage = ref<string>('')
 const loading = ref(false)
-const generatingImage = ref(false)
 const saving = ref(false)
 const hasGenerated = ref(false) // 是否已生成随机选择
 
@@ -397,32 +380,6 @@ async function generateRecipe() {
 }
 
 /**
- * 生成菜品效果图
- */
-async function generateDishImage() {
-  if (!generatedRecipe.value) return
-
-  generatingImage.value = true
-  
-  try {
-    // 提取主要食材
-    const mainIngredients = generatedRecipe.value.ingredients.main.map(ing => ing.name)
-    
-    // 调用API生成图片
-    const imageUrl = await recipeApi.generateDishImage(
-      generatedRecipe.value.name,
-      mainIngredients
-    )
-    
-    generatedImage.value = imageUrl
-  } catch (err: any) {
-    alert(err.message || '生成效果图失败')
-  } finally {
-    generatingImage.value = false
-  }
-}
-
-/**
  * 保存菜谱
  */
 async function saveRecipe() {
@@ -445,7 +402,6 @@ async function saveRecipe() {
  */
 function resetBlindBox() {
   generatedRecipe.value = null
-  generatedImage.value = ''
   resetSelection()
 }
 </script>

@@ -1,8 +1,9 @@
-import axios, { AxiosInstance, AxiosError } from 'axios'
+﻿import axios, { AxiosInstance, AxiosError } from 'axios'
+import { API_ROOT } from './apiConfig'
 
 // 创建axios实例
 const apiClient: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: API_ROOT,
   timeout: 120000,
   withCredentials: true, // 发送Cookie
   headers: {

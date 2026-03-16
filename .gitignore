@@ -1,7 +1,7 @@
-# 忽略所有 .md 文件
+﻿# 蹇界暐鎵€鏈?.md 鏂囦欢
 *.md
 
-# 但保留 README.md
+# 浣嗕繚鐣?README.md
 !README.md
 !*/README.md
 
@@ -30,30 +30,37 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# 数据库
+# 鏁版嵁搴?
 *.db
 *.sqlite
 *.sqlite3
 
-# 环境变量
+# 鐜鍙橀噺
 .env
 .env.local
 .env.*.local
 
-# 日志
+# 鏃ュ織
 *.log
 logs/
 
-# 构建输出
+# 鏋勫缓杈撳嚭
 dist/
 build/
 *.egg-info/
 
-# 上传文件
+# 涓婁紶鏂囦欢
 uploads/
 !uploads/.gitkeep
 
-# 临时文件
+# 涓存椂鏂囦欢
 *.tmp
 *.temp
 .cache/
+# Environment files (keep templates only)
+.env
+.env.*
+!.env.example
+!**/.env.example
+!.env*.example
+!**/.env*.example
