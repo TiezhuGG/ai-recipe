@@ -17,6 +17,7 @@ DB_HOST=${DB_HOST:-"localhost"}
 DB_PORT=${DB_PORT:-"5432"}
 BACKEND_WAIT_SECONDS=${BACKEND_WAIT_SECONDS:-120}
 FRONTEND_WAIT_SECONDS=${FRONTEND_WAIT_SECONDS:-60}
+DB_WAIT_SECONDS=${DB_WAIT_SECONDS:-60}
 
 check_http() {
   local url=$1
@@ -31,10 +32,53 @@ check_http() {
   fi
 }
 
-check_http "${BACKEND_URL}" "backend" "${BACKEND_WAIT_SECONDS}"
-check_http "${FRONTEND_URL}" "frontend" "${FRONTEND_WAIT_SECONDS}"
+check_compose_health() {
+  local service_name=$1
+  local timeout_seconds=$2
+  local elapsed=0
+
+  while [ "${elapsed}" -lt "${timeout_seconds}" ]; do
+    local container_id
+    container_id=$(compose ps -q "${service_name}" 2>/dev/null | head -n 1)
+
+    if [ -n "${container_id}" ]; then
+      local status
+      status=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "${container_id}" 2>/dev/null || true)
+
+      case "${status}" in
+        healthy|running)
+          log_info "${service_name} is healthy (${status})"
+          return 0
+          ;;
+        unhealthy|exited|dead)
+          log_error "${service_name} became unhealthy (${status})"
+          return 1
+          ;;
+      esac
+    fi
+
+    sleep 2
+    elapsed=$((elapsed + 2))
+  done
+
+  log_warn "Timed out while waiting for ${service_name} container health"
+  return 1
+}
+
+if command -v docker >/dev/null 2>&1 && compose_service_exists backend; then
+  check_compose_health backend "${BACKEND_WAIT_SECONDS}"
+else
+  check_http "${BACKEND_URL}" "backend" "${BACKEND_WAIT_SECONDS}"
+fi
+
+if command -v docker >/dev/null 2>&1 && compose_service_exists frontend; then
+  check_compose_health frontend "${FRONTEND_WAIT_SECONDS}"
+else
+  check_http "${FRONTEND_URL}" "frontend" "${FRONTEND_WAIT_SECONDS}"
+fi
 
 if command -v docker >/dev/null 2>&1 && compose_service_exists db; then
+  check_compose_health db "${DB_WAIT_SECONDS}"
   if compose_service_running db; then
     if compose exec -T db pg_isready -U "${POSTGRES_USER:-recipe_user}" -d "${POSTGRES_DB:-recipe_db}" >/dev/null 2>&1; then
       log_info "database is healthy inside Docker"

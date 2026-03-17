@@ -55,8 +55,7 @@ log_section "Building and starting containers"
 compose up -d --build --remove-orphans
 
 log_section "Waiting for services"
-wait_for_http_ok "http://localhost:8000/health" 90 "backend"
-wait_for_http_ok "http://localhost/nginx-health" 90 "frontend"
+bash scripts/health-check.sh
 
 log_section "Container status"
 compose ps
@@ -67,4 +66,3 @@ compose logs --tail=30 backend frontend db
 log_info "Deployment finished"
 log_info "Frontend: http://localhost"
 log_info "Backend:  http://localhost:8000"
-
