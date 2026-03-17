@@ -15,12 +15,15 @@ BACKEND_URL=${BACKEND_URL:-"http://localhost:8000/health"}
 FRONTEND_URL=${FRONTEND_URL:-"http://localhost/nginx-health"}
 DB_HOST=${DB_HOST:-"localhost"}
 DB_PORT=${DB_PORT:-"5432"}
+BACKEND_WAIT_SECONDS=${BACKEND_WAIT_SECONDS:-120}
+FRONTEND_WAIT_SECONDS=${FRONTEND_WAIT_SECONDS:-60}
 
 check_http() {
   local url=$1
   local label=$2
+  local timeout_seconds=$3
 
-  if curl -fsS --max-time 10 "${url}" >/dev/null 2>&1; then
+  if wait_for_http_ok "${url}" "${timeout_seconds}" "${label}"; then
     log_info "${label} is healthy: ${url}"
   else
     log_error "${label} check failed: ${url}"
@@ -28,8 +31,8 @@ check_http() {
   fi
 }
 
-check_http "${BACKEND_URL}" "backend"
-check_http "${FRONTEND_URL}" "frontend"
+check_http "${BACKEND_URL}" "backend" "${BACKEND_WAIT_SECONDS}"
+check_http "${FRONTEND_URL}" "frontend" "${FRONTEND_WAIT_SECONDS}"
 
 if command -v docker >/dev/null 2>&1 && compose_service_exists db; then
   if compose_service_running db; then
@@ -56,4 +59,3 @@ else
 fi
 
 log_info "All health checks passed"
-

@@ -38,11 +38,12 @@ jobs:
             set -Eeuo pipefail
             cd "${DEPLOY_PATH}"
 
+            git checkout main
+            git reset --hard HEAD
             previous_commit="$(git rev-parse HEAD)"
             echo "Previous commit: ${previous_commit}"
 
             git fetch --all --prune
-            git checkout main
             git pull --ff-only origin main
 
             current_commit="$(git rev-parse HEAD)"
@@ -60,6 +61,8 @@ jobs:
             fi
 
             echo "Deploy failed, rolling back to ${previous_commit}"
+            sudo docker compose ps || true
+            sudo docker compose logs --tail=120 backend frontend db || true
             git checkout main
             git reset --hard "${previous_commit}"
 
