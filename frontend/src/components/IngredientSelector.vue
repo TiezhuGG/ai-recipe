@@ -16,6 +16,7 @@
       >
         {{ ingredient }}
         <button
+          type="button"
           @click="removeIngredient(index)"
           class="hover:text-dark-300"
         >
@@ -36,12 +37,14 @@
         class="flex-1 px-4 py-3 bg-dark-400 border-2 border-gray-600 rounded-lg text-gray-200 placeholder-gray-500 focus:border-primary-500 focus:outline-none"
       />
       <button
+        type="button"
         @click="addFromInput"
         class="px-6 py-3 bg-primary-500 text-dark-500 rounded-lg hover:bg-primary-400 transition font-medium"
       >
         确定
       </button>
       <button
+        type="button"
         @click="triggerImageUpload"
         class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition flex items-center gap-2"
       >
@@ -62,6 +65,7 @@
     <!-- 预设食材分类（可折叠） -->
     <div class="space-y-2">
       <button
+        type="button"
         @click="showPresets = !showPresets"
         class="flex items-center justify-between w-full px-4 py-3 card-section hover:bg-dark-300 rounded-lg transition"
       >
@@ -83,6 +87,7 @@
             <button
               v-for="item in category.items"
               :key="item"
+              type="button"
               @click="togglePresetIngredient(item)"
               :class="[
                 'px-3 py-1 rounded-lg text-sm transition-all font-medium',
@@ -115,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { recipeApi } from '@/services/recipeApi'
 
 // Props
@@ -123,7 +128,9 @@ interface Props {
   modelValue: string[]
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: () => [],
+})
 
 // Emits
 const emit = defineEmits<{
@@ -131,7 +138,14 @@ const emit = defineEmits<{
 }>()
 
 // 状态
-const selectedIngredients = ref<string[]>([...props.modelValue])
+const selectedIngredients = computed({
+  get() {
+    return props.modelValue
+  },
+  set(newValue: string[]) {
+    emit('update:modelValue', newValue)
+  }
+})
 const inputText = ref('')
 const fileInput = ref<HTMLInputElement>()
 const uploading = ref(false)
@@ -175,23 +189,6 @@ const ingredientCategories = [
 
 const showPresets = ref(false)
 
-// 监听外部变化
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    selectedIngredients.value = [...newValue]
-  }
-)
-
-// 监听内部变化，同步到外部
-watch(
-  selectedIngredients,
-  (newValue) => {
-    emit('update:modelValue', newValue)
-  },
-  { deep: true }
-)
-
 /**
  * 从输入框添加食材
  */
@@ -203,7 +200,7 @@ function addFromInput() {
     .map(item => item.trim())
     .filter(item => item && !selectedIngredients.value.includes(item))
 
-  selectedIngredients.value.push(...newIngredients)
+  selectedIngredients.value = [...selectedIngredients.value, ...newIngredients]
   inputText.value = ''
 }
 
@@ -211,19 +208,19 @@ function addFromInput() {
  * 切换预设食材
  */
 function togglePresetIngredient(ingredient: string) {
-  const index = selectedIngredients.value.indexOf(ingredient)
-  if (index > -1) {
-    selectedIngredients.value.splice(index, 1)
-  } else {
-    selectedIngredients.value.push(ingredient)
+  if (selectedIngredients.value.includes(ingredient)) {
+    selectedIngredients.value = selectedIngredients.value.filter(item => item !== ingredient)
+    return
   }
+
+  selectedIngredients.value = [...selectedIngredients.value, ingredient]
 }
 
 /**
  * 移除食材
  */
 function removeIngredient(index: number) {
-  selectedIngredients.value.splice(index, 1)
+  selectedIngredients.value = selectedIngredients.value.filter((_, itemIndex) => itemIndex !== index)
 }
 
 /**
@@ -271,7 +268,7 @@ async function handleImageUpload(event: Event) {
     const newIngredients = allIngredients.filter(
       item => !selectedIngredients.value.includes(item)
     )
-    selectedIngredients.value.push(...newIngredients)
+    selectedIngredients.value = [...selectedIngredients.value, ...newIngredients]
   } catch (err: any) {
     error.value = err.message || '识别失败，请重试'
   } finally {
