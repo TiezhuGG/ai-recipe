@@ -100,11 +100,14 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ### Recipes
 
+- `GET /api/session/init`
 - `POST /api/recipes/generate`
 - `POST /api/recipes/save`
 - `GET /api/recipes/history`
 - `GET /api/recipes/{recipe_id}`
 - `POST /api/recipes/generate-image`
+
+Save/history endpoints now require a valid session cookie. Frontend should call `GET /api/session/init` before save/history requests.
 
 说明：`generate-image` 当前返回 `503`，用于临时关闭效果图功能。
 

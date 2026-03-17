@@ -176,6 +176,7 @@ bash scripts/backup-db.sh
 
 ### Recipes
 
+- `GET /api/session/init`
 - `POST /api/recipes/generate`
 - `POST /api/recipes/save`
 - `GET /api/recipes/history`
