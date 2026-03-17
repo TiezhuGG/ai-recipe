@@ -14,19 +14,20 @@
       <!-- 搜索区域 -->
       <div class="card-dark p-8 mb-6">
         <!-- 搜索输入 -->
-        <div class="flex gap-3 mb-6">
+        <div class="mb-6 space-y-3 sm:flex sm:items-stretch sm:gap-3 sm:space-y-0">
           <input
             v-model="searchQuery"
             @keyup.enter="handleSearch"
             @input="handleInputChange"
             type="text"
             placeholder="🔍 输入食材名称，如：番茄、鸡蛋、牛肉..."
-            class="flex-1 px-6 py-4 bg-gray-700 border-2 border-gray-600 rounded-lg text-gray-200 placeholder-gray-500 focus:border-primary-500 focus:outline-none text-lg"
+            class="w-full px-6 py-4 bg-gray-700 border-2 border-gray-600 rounded-lg text-gray-200 placeholder-gray-500 focus:border-primary-500 focus:outline-none text-lg sm:flex-1"
           />
           <button
+            type="button"
             @click="handleSearch"
             :disabled="!searchQuery.trim()"
-            class="px-8 py-4 bg-primary-500 text-gray-900 rounded-lg hover:bg-primary-400 transition font-medium text-lg disabled:bg-gray-600 disabled:text-gray-400"
+            class="w-full rounded-lg bg-primary-500 px-8 py-4 text-lg font-medium text-gray-900 transition hover:bg-primary-400 disabled:bg-gray-600 disabled:text-gray-400 sm:w-auto"
           >
             搜索
           </button>

@@ -1,85 +1,107 @@
 <template>
-  <div class="flex items-center justify-between bg-dark-500 px-6 py-4 rounded-lg border-2 border-primary-500">
-    <div class="flex items-center gap-3">
-      <span class="text-3xl">{{ icon }}</span>
-      <div>
-        <h1 class="text-2xl font-bold text-primary-500">{{ title }}</h1>
-        <p class="text-xs text-gray-400">{{ subtitle }}</p>
+  <div class="rounded-lg border-2 border-primary-500 bg-dark-500 px-4 py-4 sm:px-6">
+    <div class="flex items-start justify-between gap-3 sm:items-center">
+      <div class="flex min-w-0 items-center gap-3">
+        <span class="shrink-0 text-3xl">{{ icon }}</span>
+        <div class="min-w-0">
+          <h1 class="break-words text-xl font-bold text-primary-500 sm:text-2xl">{{ title }}</h1>
+          <p class="break-words text-xs leading-relaxed text-gray-400">{{ subtitle }}</p>
+        </div>
       </div>
+
+      <button
+        type="button"
+        class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-gray-600 bg-dark-400 px-3 py-2 text-sm font-medium text-gray-300 transition hover:bg-dark-300 sm:hidden"
+        @click="mobileMenuOpen = !mobileMenuOpen"
+      >
+        <span>{{ currentNavLabel }}</span>
+        <svg
+          :class="['h-4 w-4 transition-transform', mobileMenuOpen ? 'rotate-180' : '']"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
     </div>
-    
-    <div class="flex gap-3">
+
+    <div class="mt-4 hidden flex-wrap gap-3 sm:flex">
       <button
-        @click="$router.push('/')"
-        :class="[
-          'px-4 py-2 rounded-lg transition font-medium',
-          currentRoute === 'home'
-            ? 'bg-primary-500 text-dark-500 hover:bg-primary-400'
-            : 'bg-dark-400 text-gray-300 hover:bg-dark-300 border border-gray-600'
-        ]"
+        v-for="item in navigationItems"
+        :key="item.route"
+        type="button"
+        :class="navButtonClass(item.route)"
+        @click="goTo(item.path)"
       >
-        🏠 主页
+        {{ item.label }}
       </button>
+    </div>
+
+    <div v-if="mobileMenuOpen" class="mt-4 grid gap-2 sm:hidden">
       <button
-        @click="$router.push('/blind-box')"
-        :class="[
-          'px-4 py-2 rounded-lg transition font-medium',
-          currentRoute === 'blind-box'
-            ? 'bg-primary-500 text-dark-500 hover:bg-primary-400'
-            : 'bg-dark-400 text-gray-300 hover:bg-dark-300 border border-gray-600'
-        ]"
+        v-for="item in navigationItems"
+        :key="item.route"
+        type="button"
+        :class="mobileNavButtonClass(item.route)"
+        @click="goTo(item.path)"
       >
-        🎁 美食盲盒
+        {{ item.label }}
       </button>
-      <button
-        @click="$router.push('/history')"
-        :class="[
-          'px-4 py-2 rounded-lg transition font-medium',
-          currentRoute === 'history'
-            ? 'bg-primary-500 text-dark-500 hover:bg-primary-400'
-            : 'bg-dark-400 text-gray-300 hover:bg-dark-300 border border-gray-600'
-        ]"
-      >
-        📖 菜谱全集
-      </button>
-      <button
-        @click="$router.push('/cooking-school')"
-        :class="[
-          'px-4 py-2 rounded-lg transition font-medium',
-          currentRoute === 'cooking-school'
-            ? 'bg-primary-500 text-dark-500 hover:bg-primary-400'
-            : 'bg-dark-400 text-gray-300 hover:bg-dark-300 border border-gray-600'
-        ]"
-      >
-        👨‍🍳 去学厨房
-      </button>
-      <button
-        @click="$router.push('/search')"
-        :class="[
-          'px-4 py-2 rounded-lg transition font-medium',
-          currentRoute === 'search'
-            ? 'bg-primary-500 text-dark-500 hover:bg-primary-400'
-            : 'bg-dark-400 text-gray-300 hover:bg-dark-300 border border-gray-600'
-        ]"
-      >
-        🔍 随料大搜
-      </button>
-      <!-- <button
-        class="px-4 py-2 bg-dark-400 text-gray-300 rounded-lg hover:bg-dark-300 transition border border-gray-600"
-      >
-        ⋯ 更多
-      </button> -->
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+type RouteName = 'home' | 'blind-box' | 'history' | 'cooking-school' | 'search'
+
 interface Props {
   icon: string
   title: string
   subtitle: string
-  currentRoute: 'home' | 'blind-box' | 'history' | 'cooking-school' | 'search'
+  currentRoute: RouteName
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+const router = useRouter()
+const mobileMenuOpen = ref(false)
+
+const navigationItems: Array<{ route: RouteName; path: string; label: string }> = [
+  { route: 'home', path: '/', label: '🏠 主页' },
+  { route: 'blind-box', path: '/blind-box', label: '🎁 美食盲盒' },
+  { route: 'history', path: '/history', label: '📖 菜谱全集' },
+  { route: 'cooking-school', path: '/cooking-school', label: '👨‍🍳 去学厨房' },
+  { route: 'search', path: '/search', label: '🔍 随料大搜' },
+]
+
+const currentNavLabel = computed(() => {
+  return navigationItems.find(item => item.route === props.currentRoute)?.label ?? '导航'
+})
+
+function goTo(path: string) {
+  mobileMenuOpen.value = false
+  router.push(path)
+}
+
+function navButtonClass(route: RouteName) {
+  return [
+    'rounded-lg px-4 py-2 font-medium transition',
+    props.currentRoute === route
+      ? 'bg-primary-500 text-dark-500 hover:bg-primary-400'
+      : 'border border-gray-600 bg-dark-400 text-gray-300 hover:bg-dark-300',
+  ]
+}
+
+function mobileNavButtonClass(route: RouteName) {
+  return [
+    'w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition',
+    props.currentRoute === route
+      ? 'bg-primary-500 text-dark-500 hover:bg-primary-400'
+      : 'border border-gray-600 bg-dark-400 text-gray-300 hover:bg-dark-300',
+  ]
+}
 </script>
