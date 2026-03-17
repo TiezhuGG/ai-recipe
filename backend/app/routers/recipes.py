@@ -42,7 +42,7 @@ def get_session_service(db: Session = Depends(get_db)) -> SessionService:
 async def generate_recipe(
     request: GenerateRecipeRequest,
     response: Response,
-    session_id: Optional[str] = Cookie(None),
+    session_id: Optional[str] = Cookie(None, alias=settings.SESSION_COOKIE_NAME),
     recipe_service: RecipeService = Depends(get_recipe_service),
     session_service: SessionService = Depends(get_session_service),
 ):
@@ -82,17 +82,25 @@ async def generate_recipe(
 @router.post('/recipes/save', response_model=SaveRecipeResponse)
 async def save_recipe(
     request: SaveRecipeRequest,
-    session_id: Optional[str] = Cookie(None),
+    response: Response,
+    session_id: Optional[str] = Cookie(None, alias=settings.SESSION_COOKIE_NAME),
     recipe_service: RecipeService = Depends(get_recipe_service),
     session_service: SessionService = Depends(get_session_service),
 ):
     try:
-        if not session_id:
-            raise HTTPException(status_code=400, detail='请先生成菜谱')
+        user_id, new_session_id = await session_service.get_or_create_user(session_id)
 
-        user_id = session_service.get_user_id_by_session(session_id)
-        if not user_id:
-            raise HTTPException(status_code=400, detail='会话无效，请重新生成菜谱')
+        if new_session_id != session_id:
+            response.set_cookie(
+                key=settings.SESSION_COOKIE_NAME,
+                value=new_session_id,
+                httponly=True,
+                max_age=settings.SESSION_COOKIE_MAX_AGE,
+                samesite=settings.SESSION_COOKIE_SAMESITE,
+                secure=settings.SESSION_COOKIE_SECURE,
+                domain=settings.SESSION_COOKIE_DOMAIN or None,
+                path='/',
+            )
 
         recipe_id = await recipe_service.save_recipe(request.model_dump(), user_id)
         return SaveRecipeResponse(id=recipe_id, success=True, message='菜谱保存成功')
@@ -107,7 +115,7 @@ async def save_recipe(
 async def get_recipe_history(
     limit: int = 50,
     offset: int = 0,
-    session_id: Optional[str] = Cookie(None),
+    session_id: Optional[str] = Cookie(None, alias=settings.SESSION_COOKIE_NAME),
     recipe_service: RecipeService = Depends(get_recipe_service),
     session_service: SessionService = Depends(get_session_service),
 ):
@@ -137,7 +145,7 @@ async def get_recipe_history(
 @router.get('/recipes/{recipe_id}', response_model=RecipeResponse)
 async def get_recipe_by_id(
     recipe_id: str,
-    session_id: Optional[str] = Cookie(None),
+    session_id: Optional[str] = Cookie(None, alias=settings.SESSION_COOKIE_NAME),
     recipe_service: RecipeService = Depends(get_recipe_service),
     session_service: SessionService = Depends(get_session_service),
 ):
