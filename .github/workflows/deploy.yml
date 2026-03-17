@@ -34,14 +34,43 @@ jobs:
       - name: Deploy on server
         shell: bash
         run: |
-          ssh -i ~/.ssh/id_rsa -p "${{ vars.DEPLOY_PORT }}" "${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}" << EOF
-            set -e
-            cd "${{ vars.DEPLOY_PATH }}"
+          ssh -i ~/.ssh/id_rsa -p "${{ vars.DEPLOY_PORT }}" "${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }}" "DEPLOY_PATH='${{ vars.DEPLOY_PATH }}' bash -s" << 'EOF'
+            set -Eeuo pipefail
+            cd "${DEPLOY_PATH}"
+
+            previous_commit="$(git rev-parse HEAD)"
+            echo "Previous commit: ${previous_commit}"
 
             git fetch --all --prune
             git checkout main
             git pull --ff-only origin main
 
-            sudo docker compose up -d --build
-            sudo docker compose ps
+            current_commit="$(git rev-parse HEAD)"
+            echo "Deploying commit: ${current_commit}"
+
+            deploy_and_verify() {
+              sudo docker compose up -d --build --remove-orphans
+              sudo bash scripts/health-check.sh
+            }
+
+            if deploy_and_verify; then
+              echo "Deploy succeeded"
+              sudo docker compose ps
+              exit 0
+            fi
+
+            echo "Deploy failed, rolling back to ${previous_commit}"
+            git checkout main
+            git reset --hard "${previous_commit}"
+
+            if deploy_and_verify; then
+              echo "Rollback succeeded"
+              sudo docker compose ps
+            else
+              echo "Rollback failed"
+              sudo docker compose ps || true
+              sudo docker compose logs --tail=120 backend frontend db || true
+            fi
+
+            exit 1
           EOF
