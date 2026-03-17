@@ -102,6 +102,11 @@ export interface SaveRecipeResponse {
 }
 
 // 历史菜谱响应
+export interface SessionInitResponse {
+  success: boolean
+  message: string
+}
+
 export interface RecipeHistoryResponse {
   recipes: RecipeListItem[]
   total: number

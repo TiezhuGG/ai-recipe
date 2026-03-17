@@ -7,12 +7,50 @@ import type {
   GenerateRecipeRequest,
   RecipeResponse,
   SaveRecipeResponse,
+  SessionInitResponse,
   RecipeHistoryResponse,
   ImageRecognitionResponse,
   Recipe,
 } from '@/types'
 
 export class RecipeAPIClient {
+  private sessionReadyPromise: Promise<void> | null = null
+
+  async ensureSession(force = false): Promise<void> {
+    if (force || !this.sessionReadyPromise) {
+      this.sessionReadyPromise = apiClient
+        .get<SessionInitResponse>('/session/init')
+        .then((response) => {
+          if (!response.data.success) {
+            throw new Error(response.data.message || '初始化会话失败')
+          }
+        })
+        .catch((error) => {
+          this.sessionReadyPromise = null
+          console.error('初始化会话失败:', error)
+          throw new Error('初始化会话失败，请刷新页面后重试')
+        })
+    }
+
+    return this.sessionReadyPromise
+  }
+
+  private async withSession<T>(request: () => Promise<T>): Promise<T> {
+    await this.ensureSession()
+
+    try {
+      return await request()
+    } catch (error: any) {
+      if (error?.response?.status === 403) {
+        this.sessionReadyPromise = null
+        await this.ensureSession(true)
+        return request()
+      }
+
+      throw error
+    }
+  }
+
   async generateRecipe(params: GenerateRecipeRequest): Promise<Recipe> {
     try {
       const response = await apiClient.post<RecipeResponse>('/recipes/generate', params)
@@ -54,7 +92,9 @@ export class RecipeAPIClient {
         safety_tips: recipe.safetyTips,
       }
 
-      const response = await apiClient.post<SaveRecipeResponse>('/recipes/save', request)
+      const response = await this.withSession(() =>
+        apiClient.post<SaveRecipeResponse>('/recipes/save', request)
+      )
 
       if (!response.data.success) {
         throw new Error(response.data.message || '保存失败')
@@ -69,9 +109,11 @@ export class RecipeAPIClient {
 
   async getRecipeHistory(limit = 50, offset = 0): Promise<RecipeHistoryResponse> {
     try {
-      const response = await apiClient.get<RecipeHistoryResponse>('/recipes/history', {
-        params: { limit, offset },
-      })
+      const response = await this.withSession(() =>
+        apiClient.get<RecipeHistoryResponse>('/recipes/history', {
+          params: { limit, offset },
+        })
+      )
 
       return {
         recipes: response.data.recipes.map((item: any) => ({
@@ -95,7 +137,7 @@ export class RecipeAPIClient {
 
   async getRecipeById(id: string): Promise<Recipe> {
     try {
-      const response = await apiClient.get<RecipeResponse>(`/recipes/${id}`)
+      const response = await this.withSession(() => apiClient.get<RecipeResponse>(`/recipes/${id}`))
       return this.transformRecipeResponse(response.data)
     } catch (error) {
       console.error('获取菜谱详情失败:', error)

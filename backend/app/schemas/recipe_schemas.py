@@ -69,6 +69,11 @@ class SaveRecipeResponse(BaseModel):
     message: str = "菜谱保存成功"
 
 
+class SessionInitResponse(BaseModel):
+    success: bool
+    message: str = "Session is ready"
+
+
 class RecipeListItem(BaseModel):
     """菜谱列表项模型"""
     id: str
