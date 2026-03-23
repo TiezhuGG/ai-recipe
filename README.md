@@ -111,9 +111,9 @@ bash scripts/deploy-docker.sh
 
 部署完成后默认访问：
 
-- Frontend: `http://localhost`
-- Backend: `http://localhost:8000`
-- API Docs: `http://localhost/docs`
+- Frontend: `http://localhost:8081`
+- Backend: `http://localhost:8081/health`
+- API Docs: `http://localhost:8081/docs`
 
 ### 4. Verify services
 

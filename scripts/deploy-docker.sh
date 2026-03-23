@@ -64,5 +64,5 @@ log_section "Recent logs"
 compose logs --tail=30 backend frontend db
 
 log_info "Deployment finished"
-log_info "Frontend: http://localhost"
-log_info "Backend:  http://localhost:8000"
+log_info "Frontend: http://localhost:8081"
+log_info "Backend:  http://localhost:8081/health"

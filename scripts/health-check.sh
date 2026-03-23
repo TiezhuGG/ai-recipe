@@ -11,8 +11,8 @@ load_env
 
 require_command curl
 
-BACKEND_URL=${BACKEND_URL:-"http://localhost:8000/health"}
-FRONTEND_URL=${FRONTEND_URL:-"http://localhost/nginx-health"}
+BACKEND_URL=${BACKEND_URL:-"http://localhost:8081/health"}
+FRONTEND_URL=${FRONTEND_URL:-"http://localhost:8081/nginx-health"}
 DB_HOST=${DB_HOST:-"localhost"}
 DB_PORT=${DB_PORT:-"5432"}
 BACKEND_WAIT_SECONDS=${BACKEND_WAIT_SECONDS:-120}

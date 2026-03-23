@@ -35,10 +35,10 @@ services:
       APP_ENV: ${APP_ENV:-production}
       UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
       MAX_UPLOAD_SIZE: ${MAX_UPLOAD_SIZE:-10485760}
-      CORS_ORIGINS: ${CORS_ORIGINS:-https://your-domain.com}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://101.34.87.128:8081}
       SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-session_id}
       SESSION_COOKIE_DOMAIN: ${SESSION_COOKIE_DOMAIN:-}
-      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-true}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
       SESSION_COOKIE_SAMESITE: ${SESSION_COOKIE_SAMESITE:-lax}
       SESSION_COOKIE_MAX_AGE: ${SESSION_COOKIE_MAX_AGE:-2592000}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
@@ -72,7 +72,7 @@ services:
     container_name: recipe-frontend
     restart: always
     ports:
-      - "127.0.0.1:8081:80"
+      - "8081:80"
     depends_on:
       - backend
     healthcheck:

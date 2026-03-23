@@ -43,8 +43,8 @@ fi
 echo
 
 log_section "HTTP health"
-BACKEND_URL=${BACKEND_URL:-"http://localhost:8000/health"}
-FRONTEND_URL=${FRONTEND_URL:-"http://localhost/nginx-health"}
+BACKEND_URL=${BACKEND_URL:-"http://localhost:8081/health"}
+FRONTEND_URL=${FRONTEND_URL:-"http://localhost:8081/nginx-health"}
 
 if curl -fsS --max-time 10 "${BACKEND_URL}" >/dev/null 2>&1; then
   log_info "backend healthy"
@@ -75,9 +75,9 @@ echo
 
 log_section "Network listeners"
 if command -v ss >/dev/null 2>&1; then
-  ss -tuln | grep -E ':(80|443|8000|5432)\s' || true
+  ss -tuln | grep -E ':(80|443|8000|8081|5432)\s' || true
 elif command -v netstat >/dev/null 2>&1; then
-  netstat -tuln | grep -E ':(80|443|8000|5432)\s' || true
+  netstat -tuln | grep -E ':(80|443|8000|8081|5432)\s' || true
 else
   log_warn "Neither ss nor netstat is available"
 fi
@@ -89,4 +89,3 @@ if [ -d "${BACKUP_DIR}" ]; then
 else
   log_warn "Backup directory does not exist yet: ${BACKUP_DIR}"
 fi
-

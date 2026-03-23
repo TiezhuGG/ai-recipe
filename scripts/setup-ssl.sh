@@ -18,7 +18,7 @@ require_command certbot
 
 DOMAIN=${1:-${DOMAIN:-}}
 EMAIL=${2:-${EMAIL:-}}
-FRONTEND_UPSTREAM=${FRONTEND_UPSTREAM:-127.0.0.1:8080}
+FRONTEND_UPSTREAM=${FRONTEND_UPSTREAM:-127.0.0.1:8081}
 BACKEND_UPSTREAM=${BACKEND_UPSTREAM:-127.0.0.1:8000}
 
 if [ -z "${DOMAIN}" ] || [ -z "${EMAIL}" ]; then
@@ -29,7 +29,7 @@ fi
 
 if grep -Eq '"80:80"|127\.0\.0\.1:80:80' docker-compose.yml 2>/dev/null; then
   log_warn "Your current docker-compose frontend mapping still occupies host port 80."
-  log_warn "Host nginx cannot listen on 80/443 until you remap the frontend container to 127.0.0.1:8080:80 or similar."
+  log_warn "Host nginx cannot listen on 80/443 until you remap the frontend container to 127.0.0.1:8081:80 or similar."
   log_warn "After adjusting docker-compose.yml, rerun this script."
   exit 1
 fi
@@ -108,4 +108,3 @@ certbot --nginx -d "${DOMAIN}" --non-interactive --agree-tos --email "${EMAIL}" 
 certbot renew --dry-run
 
 log_info "SSL setup completed for https://${DOMAIN}"
-
